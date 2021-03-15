@@ -1,0 +1,95 @@
+# top-level http config for websocket headers
+# If Upgrade is defined, Connection = upgrade
+# If Upgrade is empty, Connection = close
+map $http_upgrade $connection_upgrade {
+
+    default            upgrade;
+    ""                 close;
+
+}
+
+map $http_x_forwarded_host $best_host {
+
+    default            $http_x_forwarded_host;
+    ""                 $host;
+
+}
+
+
+upstream application {
+
+    server             0.0.0.0:5200;
+
+}
+
+
+server {
+
+    gzip               off;
+    server_tokens      off;
+    listen             5000;
+    listen             [::]:5000 ipv6only=on default_server;
+    server_name        coronavirus.data.gov.uk;
+    keepalive_timeout  65s;
+    resolver_timeout   30s;
+    uwsgi_read_timeout 60s;
+    merge_slashes      on;
+
+    charset            utf-8;
+
+    access_log         /var/log/nginx/access.log  main;
+    sendfile           on;
+
+    location / {
+
+        try_files              $uri @app;
+
+        limit_except GET POST HEAD OPTIONS {
+            deny    all;
+        }
+
+    }
+
+    location @app {
+
+        proxy_set_header       X-Forwarded-For           $proxy_add_x_forwarded_for;
+        proxy_set_header       X-Forwarded-Host          $best_host;
+        # proxy_set_header       X-Forwarded-Proto         $scheme;
+        proxy_set_header       Host                      $best_host;
+        proxy_set_header       X-Real-IP                 $remote_addr;
+        proxy_redirect         off;
+        proxy_set_header       X-NginX-Proxy             true;
+        proxy_http_version     1.1;
+
+        # websocket headers
+        proxy_set_header       Upgrade                   $http_upgrade;
+        proxy_set_header       Connection                $http_upgrade;
+
+        add_header             X-Content-Type-Options    "nosniff";
+        add_header             Cache-Control             "max-age=30, must-revalidate, s-maxage=90";
+        add_header             x-phe-media-type          "PHE-COVID19.v1";
+        add_header             strict-transport-security "max-age=31536000; includeSubDomains; preload";
+        add_header             Content-Language          "en-GB";
+        add_header             Content-Security-Policy   "default-src 'self'; font-src 'self'; img-src 'self' *.data.gov.uk *.google-analytics.com data:; script-src 'unsafe-inline' *; connect-src 'self' *; style-src 'unsafe-inline' *;";
+        add_header             X-XSS-Protection          "1; mode=block";
+        add_header             X-Frame-Options           "SAMEORIGIN";
+        add_header             Referrer-Policy           "strict-origin";
+        add_header             Permissions-Policy        "geolocation=();notifications=();push=();sync-xhr=();vibrate=();fullscreen=(self);";
+
+        proxy_read_timeout     86400;
+
+        proxy_pass             http://application;
+
+        limit_except GET POST HEAD OPTIONS {
+            deny    all;
+        }
+
+    }
+
+    location = /sitemap.xml {
+
+        proxy_pass             https://coronavirus.data.gov.uk/public/assets/supplements/sitemap.xml;
+
+    }
+
+}

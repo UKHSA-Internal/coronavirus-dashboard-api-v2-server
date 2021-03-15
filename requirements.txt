@@ -1,0 +1,12 @@
+cython
+orjson
+azure-storage-blob
+asyncpg
+numpy
+pandas
+starlette
+fastapi
+uvicorn[standard]
+gunicorn
+aiohttp
+aiofiles

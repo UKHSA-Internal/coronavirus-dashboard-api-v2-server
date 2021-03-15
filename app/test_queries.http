@@ -1,0 +1,36 @@
+GET http://localhost:7071/api/v2/data?areaType=nation&metric=newCasesByPublishDate&metric=femaleCases&metric=maleCases&release=2020-11-20T16:53:34.0092775Z&format=json
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+###
+GET http://localhost:7071/api/v2/data?areaType=nation&metric=newCasesByPublishDate&metric=newCasesBySpecimenDate&release=2020-11-20&format=csv
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+###
+GET http://127.0.0.1:1244/api/v2/data?areaType=ltla&release=2021-03-05&metric=newCasesBySpecimenDate&metric=newCasesBySpecimenDateRollingRate&metric=cumCasesBySpecimenDate&format=json
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+
+###
+GET http://127.0.0.1:1244/api/v2/data?areaType=msoa&release=2021-03-05&metric=newCasesBySpecimenDateRollingRate&format=csv
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+###
+GET http://localhost:7071/api/v2/data?areaType=nhsTrust&areaCode=RLT&metric=cumAdmissions&release=2021-03-05&format=json
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+###
+#GET http://localhost:1244/api/v2/data?areaType=region&metric=newCasesBySpecimenDateAgeDemographics&release=2021-03-05&format=jsonl
+#HEAD http://localhost:1244/api/v2/data?areaType=utla&metric=newCasesBySpecimenDateAgeDemographics&release=2021-03-11&format=csv
+GET http://localhost:1244/api/v2/data?areaType=utla&metric=newCasesBySpecimenDateAgeDemographics&release=2021-03-11&format=csv
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
+
+### EMPTY RESPONSE
+GET http://localhost:7071/api/v2/data?areaType=overview&metric=alertLevel&release=2020-12-19T15:34:20.8082385Z&format=jsonl
+Accept: application/json, text/csv, application/jsonl, application/xml
+Accept-Encoding: gzip, deflate
