@@ -5,7 +5,7 @@ services:
     build: .
     restart: always
     volumes:
-      - ./app/:/app/app/
+      - ./app/:/app/app
       - ./server/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
       - ./server/gunicorn_conf.py:/gunicorn_conf.py
       - ./server/upload.nginx:/etc/nginx/conf.d/upload.conf
