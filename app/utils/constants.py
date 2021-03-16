@@ -278,6 +278,10 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
     "weeklyPeopleVaccinatedFirstDoseByVaccinationDate": int,
     "weeklyPeopleVaccinatedSecondDoseByVaccinationDate": int,
     "cumPeopleVaccinatedSecondDoseByVaccinationDate": int,
+
+    "cumVaccinationFirstDoseUptakeByPublishDate": int,
+    "cumVaccinationSecondDoseUptakeByPublishDate": int,
+    "cumVaccinationCompleteCoverageByPublishDate": int,
 }
 
 # Values must be provided in lowercase characters.
@@ -543,4 +547,8 @@ if ENVIRONMENT == "DEVELOPMENT":
         'cumCasesLFDOnlyBySpecimenDate': int,
         'newCasesPCROnlyBySpecimenDate': int,
         'newCasesLFDConfirmedPCRBySpecimenDateRollingSum': int,
+
+        "cumVaccinationFirstDoseUptakeByPublishDate": int,
+        "cumVaccinationSecondDoseUptakeByPublishDate": int,
+        "cumVaccinationCompleteCoverageByPublishDate": int,
     }
