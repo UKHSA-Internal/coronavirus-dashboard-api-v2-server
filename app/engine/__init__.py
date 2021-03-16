@@ -17,6 +17,7 @@ Contributors:  Pouria Hadjibagheri
 
 # Internal:
 from .from_db import get_data
+from .healthcheck import run_healthcheck
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Header
