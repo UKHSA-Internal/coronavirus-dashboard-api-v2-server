@@ -19,6 +19,7 @@ from multiprocessing import cpu_count
 from os import getenv
 
 # 3rd party:
+from uvicorn.workers import UvicornWorker
 
 # Internal: 
 
@@ -40,7 +41,7 @@ if max_workers_str:
 web_concurrency_str = getenv("WEB_CONCURRENCY", None)
 
 host = getenv("HOST", "0.0.0.0")
-port = getenv("GUNICORN_PORT", "5200")
+port = getenv("GUNICORN_PORT", "5000")
 
 use_bind = getenv("BIND", f"{host}:{port}")
 use_loglevel = getenv("LOG_LEVEL", "info")
@@ -86,6 +87,9 @@ secure_scheme_headers = {
 }
 
 
+worker_class = 'app.uvicorn_worker.APIUvicornWorker'
+
+
 # For debugging and testing
 log_data = {
     "loglevel": loglevel,
@@ -101,6 +105,7 @@ log_data = {
     "use_max_workers": use_max_workers,
     "secure_scheme_headers": secure_scheme_headers,
     "proxy_protocol": proxy_protocol,
+    "worker_class": worker_class,
     "host": host,
     "port": port,
 }
