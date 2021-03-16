@@ -20,8 +20,9 @@ from fastapi.responses import StreamingResponse
 
 # Internal: 
 from app.utils.operations import Response, Request
+from app.utils.assets import RequestMethod
 from app.exceptions import APIException
-from app.engine import get_data
+from app.engine import get_data, run_healthcheck
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -61,7 +62,6 @@ app = FastAPI(
     version="2.1.0",
     docs_url=None,
     redoc_url=None,
-    root_path="/api/v2/",
     openapi_url="/api/v2/openapi.json",
     on_startup=[setup_logging]
 )
@@ -109,7 +109,7 @@ async def main(req: APIRequest,
         })
         response = Response(content=content.encode(), status_code=err)
 
-    if request.method == "HEAD" or not isasyncgen(response.content):
+    if request.method == RequestMethod.Head or not isasyncgen(response.content):
         return APIResponse(
             response.content,
             status_code=response.status_code,
@@ -121,6 +121,21 @@ async def main(req: APIRequest,
         status_code=response.status_code,
         headers=await response.headers
     )
+
+
+@app.get("/api/v2/healthcheck")
+@app.head("/api/v2/healthcheck")
+async def healthcheck(req: APIRequest):
+    try:
+        response = await run_healthcheck()
+    except Exception() as err:
+        logger.exception(err)
+        raise err
+
+    if req.method == RequestMethod.Head:
+        return APIResponse(None, status_code=HTTPStatus.NO_CONTENT.real)
+
+    return response
 
 
 if __name__ == "__main__":
