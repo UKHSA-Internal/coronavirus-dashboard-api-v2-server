@@ -138,8 +138,8 @@ async def from_cache_or_db(request: Request) -> AsyncGenerator[bytes, None]:
                 await blob_client.download_into(cache_file)
 
                 async with aio_open(cache_file.name, mode='rb') as reader:
-                    # Read 4 MB chunks
-                    while data := await reader.read(2**22):
+                    # Read 32 MB chunks
+                    while data := await reader.read(2**25):
                         yield data
 
             return
