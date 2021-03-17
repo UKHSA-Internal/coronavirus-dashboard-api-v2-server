@@ -48,14 +48,15 @@ SELECT
         ELSE payload::JSONB
     END AS value
 FROM covid19.time_series_p${partition} AS ts
-JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
-JOIN covid19.release_reference AS rr  ON rr.id = release_id
-JOIN covid19.area_reference    AS ar  ON ar.id = area_id
+    JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
+    JOIN covid19.release_reference AS rr  ON rr.id = release_id
+    JOIN covid19.area_reference    AS ar  ON ar.id = area_id
 WHERE
       metric = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY area_code, date DESC""")
 
     nested_object = to_template("""\
 SELECT
@@ -66,15 +67,16 @@ SELECT
     mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) AS metric,
     ts_obj.value                                                     AS value
 FROM covid19.time_series_p${partition} AS ts
-JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
-JOIN covid19.release_reference AS rr  ON rr.id = release_id
-JOIN covid19.area_reference    AS ar  ON ar.id = area_id,
-     JSONB_EACH(payload) AS ts_obj
+    JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
+    JOIN covid19.release_reference AS rr  ON rr.id = release_id
+    JOIN covid19.area_reference    AS ar  ON ar.id = area_id,
+JSONB_EACH(payload) AS ts_obj
 WHERE
        mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY area_code, date DESC""")
 
     nested_array = to_template("""\
 SELECT
@@ -85,23 +87,24 @@ SELECT
     metric,
     payload       AS "${metric_name}"
 FROM covid19.time_series_p${partition} AS ts
-JOIN covid19.metric_reference   AS mr  ON mr.id = metric_id
-JOIN covid19.release_reference  AS rr  ON rr.id = release_id
-JOIN covid19.area_reference     AS ar  ON ar.id = area_id
+    JOIN covid19.metric_reference   AS mr  ON mr.id = metric_id
+    JOIN covid19.release_reference  AS rr  ON rr.id = release_id
+    JOIN covid19.area_reference     AS ar  ON ar.id = area_id
 WHERE
       metric = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY area_code, date DESC""")
 
     # noinspection SqlResolve,SqlNoDataSourceInspection
     exists = to_template("""\
 SELECT
     area_code     AS "areaCode"
 FROM covid19.time_series_p${partition} AS ts
-JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
-JOIN covid19.release_reference AS rr  ON rr.id = release_id
-JOIN covid19.area_reference    AS ar  ON ar.id = area_id
+    JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
+    JOIN covid19.release_reference AS rr  ON rr.id = release_id
+    JOIN covid19.area_reference    AS ar  ON ar.id = area_id
 WHERE
       metric = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
