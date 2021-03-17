@@ -129,3 +129,7 @@ appsettings.json
 local.settings.json
 .python_packages
 .env.dev
+
+# sql files
+time_series_p2021_3_5_utla.sql
+citus_covid19_time_series_p2021_3_5_msoa.sql

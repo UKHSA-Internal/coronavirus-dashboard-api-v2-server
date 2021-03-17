@@ -18,3 +18,21 @@ services:
       IS_DEV: 1
       API_ENV: DEVELOPMENT
       FLASK_ENV: DEVELOPMENT
+
+  storage-api-v2:
+    image: mcr.microsoft.com/azure-storage/azurite
+    restart: always
+    ports:
+    - 10000:10000
+    - 10001:10001
+    - 10002:10002
+  
+  db-api-v2:
+    image: postgres:alpine
+    restart: always
+    ports:
+    - 5432:5432
+    volumes: 
+    - ./test/sql/:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_PASSWORD: tester
