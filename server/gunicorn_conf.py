@@ -19,7 +19,6 @@ from multiprocessing import cpu_count
 from os import getenv
 
 # 3rd party:
-from uvicorn.workers import UvicornWorker
 
 # Internal: 
 
