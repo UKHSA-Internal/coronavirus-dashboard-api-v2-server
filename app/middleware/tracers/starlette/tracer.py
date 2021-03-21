@@ -100,7 +100,7 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
                 response = await call_next(request)
                 response.headers['traceparent'] = trace_parent
 
-                span.add_attribute(HTTP_STATUS_CODE, str(response.status_code))
+                span.add_attribute(HTTP_STATUS_CODE, response.status_code)
 
             return response
 
