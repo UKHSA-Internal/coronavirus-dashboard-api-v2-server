@@ -34,6 +34,7 @@ HTTP_STATUS_CODE = COMMON_ATTRIBUTES['HTTP_STATUS_CODE']
 HTTP_HOST = COMMON_ATTRIBUTES['HTTP_HOST']
 HTTP_METHOD = COMMON_ATTRIBUTES['HTTP_METHOD']
 HTTP_PATH = COMMON_ATTRIBUTES['HTTP_PATH']
+HTTP_ROUTE = COMMON_ATTRIBUTES['HTTP_ROUTE']
 
 
 config_integration.trace_integrations(['logging'])
@@ -66,39 +67,41 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
             log.setLevel(level)
 
     async def dispatch(self, request: Request, call_next):
-        try:
-            propagator = TraceContextPropagator()
-            span_context = propagator.from_headers(dict(request.headers))
+        propagator = TraceContextPropagator()
+        span_context = propagator.from_headers(dict(request.headers))
 
-            tracer = Tracer(
-                exporter=self.exporter,
-                sampler=self.sampler,
-                span_context=span_context,
-                propagator=propagator
-            )
+        tracer = Tracer(
+            exporter=self.exporter,
+            sampler=self.sampler,
+            span_context=span_context,
+            propagator=propagator
+        )
+
+        try:
             tracer.span_context.trace_options.set_enabled(True)
 
-            with tracer.span("main") as span:
+            with tracer.span(f"[{request.method}] {request.url}") as span:
                 span.span_kind = SpanKind.SERVER
-                if "traceparent" not in request.headers:
-                    trace_ctx = span.context_tracer
-                    trace_options = tracer.span_context.trace_options.trace_options_byte
-                    trace_id = trace_ctx.trace_id
-                    trace_parent = f"00-{trace_id}-{span.span_id}-0{trace_options}"
-                else:
-                    trace_parent = request.headers['traceparent']
+                # if "traceparent" not in request.headers:
+                #     trace_ctx = span.context_tracer
+                #     trace_options = tracer.span_context.trace_options.trace_options_byte
+                #     trace_id = trace_ctx.trace_id
+                #     trace_parent = f"00-{trace_id}-{span.span_id}-0{trace_options}"
+                # else:
+                #     trace_parent = request.headers['traceparent']
 
                 span.add_attribute(HTTP_URL, str(request.url))
                 span.add_attribute(HTTP_HOST, request.url.hostname)
                 span.add_attribute(HTTP_METHOD, request.method)
                 span.add_attribute(HTTP_PATH, request.url.path)
+                span.add_attribute(HTTP_ROUTE, request.url.path)
                 span.add_attribute("x_forwarded_host", request.headers.get("x_forwarded_host"))
 
                 for key, value in self.extra_attrs.items():
                     span.add_attribute(key, value)
 
                 response = await call_next(request)
-                response.headers['traceparent'] = trace_parent
+                # response.headers['traceparent'] = trace_parent
 
                 span.add_attribute(HTTP_STATUS_CODE, response.status_code)
 
@@ -106,3 +109,5 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
 
         except Exception as err:
             logger.error(err, exc_info=True)
+        finally:
+            tracer.finish()
