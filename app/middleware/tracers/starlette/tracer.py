@@ -94,7 +94,7 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
                 span.add_attribute(HTTP_PATH, request.url.path)
                 span.add_attribute("x_forwarded_host", request.headers.get("x_forwarded_host"))
 
-                for key, value in self.extra_attrs:
+                for key, value in self.extra_attrs.items():
                     span.add_attribute(key, value)
 
                 response = await call_next(request)
