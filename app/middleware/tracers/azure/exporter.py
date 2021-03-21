@@ -109,11 +109,14 @@ class Exporter(AzureExporter):
                     if key == f"{data.type}.success":
                         data.success = value
 
-                        sd.attributes[f"{data.type}.status_code"] = 200 if value else 500
+                        sd.attributes[f"status_code"] = 200 if value else 500
                         continue
 
-                    if key.startswith(data.type):
-                        data.properties["error"] = f"{value}"
+                    data.properties[key.removeprefix(f"{data.type}.")] = value
+
+                    if "error" in key:
+                        data.success = False
+
                 # if f"{data.type}.query" in sd.attributes:
                 #     data.data = sd.attributes.pop(f"{data.type}.query")
                 # if f"{data.type}.error" in sd.attributes:
