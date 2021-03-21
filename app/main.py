@@ -14,15 +14,24 @@ from sys import stdout
 from fastapi import (
     FastAPI, Query,
     Request as APIRequest,
-    Response as APIResponse
+    Response as APIResponse,
 )
 from fastapi.responses import StreamingResponse
+from fastapi.middleware import Middleware
+from fastapi.middleware.gzip import GZipMiddleware
+
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
+from opencensus.trace.samplers import AlwaysOnSampler
 
 # Internal: 
 from app.utils.operations import Response, Request
-from app.utils.assets import RequestMethod
+from app.utils.assets import RequestMethod, add_cloud_role_name
 from app.exceptions import APIException
 from app.engine import get_data, run_healthcheck
+from app.middleware.tracers.starlette import TraceRequestMiddleware
+from app.config import Settings
+from app.exceptions.handlers import exception_handlers
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -31,30 +40,20 @@ __all__ = [
 ]
 
 
-logger = logging.getLogger('COVID19-APIv2')
+logger = logging.getLogger(__name__)
 
 
-def setup_logging():
-    formatter = logging.Formatter('[%(asctime)s] %(name)s: %(levelname)s | %(message)s')
-
-    handler = logging.StreamHandler(stdout)
-    handler.setFormatter(formatter)
-
-    loggers_instances = {
-        logger,
-        logging.getLogger('uvicorn'),
-        logging.getLogger('uvicorn.access'),
-        logging.getLogger('uvicorn.error'),
-        logging.getLogger('azure'),
-        logging.getLogger('gunicorn'),
-        logging.getLogger('gunicorn.access'),
-        logging.getLogger('gunicorn.error'),
-        logging.getLogger('asyncpg'),
-    }
-
-    for logger_inst in loggers_instances:
-        logger_inst.setLevel(logging.INFO)
-        logger_inst.addHandler(handler)
+logging_instances = [
+    [logger, logging.INFO],
+    [logging.getLogger('uvicorn'), logging.WARNING],
+    [logging.getLogger('uvicorn.access'), logging.WARNING],
+    [logging.getLogger('uvicorn.error'), logging.ERROR],
+    [logging.getLogger('azure'), logging.WARNING],
+    [logging.getLogger('gunicorn'), logging.WARNING],
+    [logging.getLogger('gunicorn.access'), logging.WARNING],
+    [logging.getLogger('gunicorn.error'), logging.ERROR],
+    [logging.getLogger('asyncpg'), logging.WARNING],
+]
 
 
 app = FastAPI(
@@ -63,7 +62,22 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
     openapi_url="/api/v2/openapi.json",
-    on_startup=[setup_logging]
+    middleware=[
+        Middleware(ProxyHeadersMiddleware, trusted_hosts=Settings.service_domain),
+        Middleware(
+            TraceRequestMiddleware,
+            sampler=AlwaysOnSampler(),
+            instrumentation_key=Settings.instrumentation_key,
+            cloud_role_name=add_cloud_role_name,
+            extra_attrs=dict(
+                environment=Settings.ENVIRONMENT,
+                server_location=Settings.server_location
+            ),
+            logging_instances=logging_instances
+        ),
+        Middleware(GZipMiddleware)
+    ],
+    exception_handlers=exception_handlers
 )
 
 
@@ -123,8 +137,8 @@ async def main(req: APIRequest,
     )
 
 
-@app.get("/api/v2/healthcheck")
-@app.head("/api/v2/healthcheck")
+@app.get(f"/api/v2/{Settings.healthcheck_path}")
+@app.head(f"/api/v2/{Settings.healthcheck_path}")
 async def healthcheck(req: APIRequest):
     try:
         response = await run_healthcheck()

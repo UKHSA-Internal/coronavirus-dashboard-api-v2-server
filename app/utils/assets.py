@@ -12,6 +12,7 @@ from typing import Dict
 
 # Internal:
 from app.database import Connection
+from app.config import Settings
 from . import constants as const
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,7 +20,8 @@ from . import constants as const
 __all__ = [
     'get_latest_timestamp',
     'RequestMethod',
-    'MetricData'
+    'MetricData',
+    'add_cloud_role_name'
 ]
 
 
@@ -88,3 +90,8 @@ class MetricData:
 
     # Non-default DB partition suffixes (area types in lower case).
     single_partition_types = {"utla", "ltla", "nhstrust", "msoa"}
+
+
+def add_cloud_role_name(envelope):
+    envelope.tags['ai.cloud.role'] = Settings.cloud_role_name
+    return True

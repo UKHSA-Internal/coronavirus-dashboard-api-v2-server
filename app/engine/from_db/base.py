@@ -83,7 +83,7 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
 
     # We use cursor movements instead of offset-limit. This is faster
     # as the DB won't have to iterate to fine the offset location.
-    async with Connection() as conn, conn.transaction(), conn.transaction():
+    async with Connection() as conn, conn.transaction(readonly=True):
         # Set query
         cursor = await conn.cursor(request.db_query, *request.db_args)
 
