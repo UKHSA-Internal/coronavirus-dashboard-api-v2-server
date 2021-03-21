@@ -109,7 +109,7 @@ class Exporter(AzureExporter):
                     if key == f"{data.type}.success":
                         data.success = value
 
-                        sd.attributes[f"{data.type}.status_code"] = 200 if value else 500
+                        sd.attributes[f"{data.type}.status_code"] = '200' if value else '500'
                         continue
 
                     if key.startswith(data.type):
