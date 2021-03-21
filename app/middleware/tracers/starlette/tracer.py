@@ -78,7 +78,7 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
         )
 
         try:
-            tracer.span_context.trace_options.set_enabled(True)
+            # tracer.span_context.trace_options.set_enabled(True)
 
             with tracer.span(f"[{request.method}] {request.url}") as span:
                 span.span_kind = SpanKind.SERVER
