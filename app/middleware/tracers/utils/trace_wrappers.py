@@ -4,12 +4,13 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
 from functools import wraps
+from inspect import signature
 
 # 3rd party:
 from opencensus.trace.execution_context import get_opencensus_tracer
 from opencensus.trace.span import SpanKind
 
-# Internal: 
+# Internal:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -21,18 +22,27 @@ __all__ = [
 
 def trace_async_method_operation(*cls_attrs, dep_type="name", name="name", **attrs):
     def wrapper(func):
+        sig = signature(func)
+
         @wraps(func)
         async def process(klass, *args, **kwargs):
+            nonlocal sig
+            bound_inputs = sig.bind(klass, *args, **kwargs)
+
             tracer = get_opencensus_tracer()
 
             if tracer is None:
-                return await func(klass, *args, **kwargs)
+                return await func(*bound_inputs.args, **bound_inputs.kwargs)
 
             span = tracer.start_span()
             span.span_kind = SpanKind.UNSPECIFIED
             span.name = getattr(klass, name, None)
             dependency_type = getattr(klass, dep_type)
             span.add_attribute('dependency.type', dependency_type)
+
+            if "query" in bound_inputs.arguments:
+                span.add_attribute(f"{dependency_type}.query", bound_inputs.arguments['query'])
+                span.add_attribute(f"{dependency_type}.method.name", func.__name__)
 
             for key in cls_attrs:
                 span.add_attribute(f"{dependency_type}.{key}", getattr(klass, key, None))
