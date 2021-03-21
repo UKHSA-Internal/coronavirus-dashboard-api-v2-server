@@ -65,15 +65,10 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
             log.addHandler(self.handler)
             log.setLevel(level)
 
-    async def __call__(self, scope, receive, send):
-        # Only supports HTTP requests. WebSockets are ignored.
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-
+    async def dispatch(self, request: Request, call_next):
         try:
             propagator = TraceContextPropagator()
-            span_context = propagator.from_headers(dict(scope['headers']))
+            span_context = propagator.from_headers(dict(request.headers))
 
             tracer = Tracer(
                 exporter=self.exporter,
@@ -85,41 +80,27 @@ class TraceRequestMiddleware(BaseHTTPMiddleware):
 
             with tracer.span("main") as span:
                 span.span_kind = SpanKind.SERVER
-                if "traceparent" not in scope['headers']:
+                if "traceparent" not in request.headers:
                     trace_ctx = span.context_tracer
                     trace_options = tracer.span_context.trace_options.trace_options_byte
                     trace_id = trace_ctx.trace_id
-                    trace_parent = f"00-{trace_id}-{span.span_id}-{trace_options}"
-                    scope['headers'].append((b'traceparent', trace_parent.encode()))
+                    trace_parent = f"00-{trace_id}-{span.span_id}-0{trace_options}"
+                else:
+                    trace_parent = request.headers['traceparent']
 
-                await self.app(scope, receive, send)
-
-                return
-
-        except Exception as err:
-            logger.error(err, exc_info=True)
-
-        await self.app(scope, receive, send)
-
-    async def dispatch(self, request: Request, call_next):
-        try:
-
-            tracer = get_opencensus_tracer()
-
-            with get_current_span() as span:
-                span.span_kind = SpanKind.SERVER
-                tracer.add_attribute_to_current_span(HTTP_URL, str(request.url))
-                tracer.add_attribute_to_current_span(HTTP_HOST, request.url.hostname)
-                tracer.add_attribute_to_current_span(HTTP_METHOD, request.method)
-                tracer.add_attribute_to_current_span(HTTP_PATH, request.url.path)
-                tracer.add_attribute_to_current_span("x_forwarded_host", request.headers.get("x_forwarded_host"))
+                span.add_attribute(HTTP_URL, str(request.url))
+                span.add_attribute(HTTP_HOST, request.url.hostname)
+                span.add_attribute(HTTP_METHOD, request.method)
+                span.add_attribute(HTTP_PATH, request.url.path)
+                span.add_attribute("x_forwarded_host", request.headers.get("x_forwarded_host"))
 
                 for key, value in self.extra_attrs:
-                    tracer.add_attribute_to_current_span(key, value)
+                    span.add_attribute(key, value)
 
                 response = await call_next(request)
+                response.headers['traceparent'] = trace_parent
 
-                tracer.add_attribute_to_current_span(HTTP_STATUS_CODE, str(response.status_code))
+                span.add_attribute(HTTP_STATUS_CODE, str(response.status_code))
 
             return response
 
