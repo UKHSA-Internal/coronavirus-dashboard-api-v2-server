@@ -34,6 +34,8 @@ class Exporter(AzureExporter):
             time=sd.start_time,
         )
 
+        predefined_props = set()
+
         envelope.tags['ai.operation.id'] = sd.context.trace_id
         if sd.parent_span_id:
             envelope.tags['ai.operation.parentId'] = '{}'.format(sd.parent_span_id)
@@ -105,17 +107,28 @@ class Exporter(AzureExporter):
 
             elif "dependency.type" in sd.attributes:
                 data.type = sd.attributes.pop("dependency.type")
-                for key, value in dict(sd.attributes).items():
+                for key in list(sd.attributes):
                     if key == f"{data.type}.success":
-                        data.success = value
-
-                        sd.attributes[f"status_code"] = 200 if value else 500
+                        data.success = sd.attributes.pop(key)
+                        sd.attributes[f"status_code"] = 200 if data.success else 500
+                        data.resultCode = str(sd.attributes[f"status_code"])
+                        predefined_props.add(key)
                         continue
-
-                    data.properties[key.removeprefix(f"{data.type}.")] = value
+                    elif key == f"{data.type}.target":
+                        data.target = sd.attributes.pop(key)
+                        predefined_props.add(key)
+                        continue
+                    elif key == f"{data.type}.data":
+                        data.data = sd.attributes.pop(key)
+                        predefined_props.add(key)
+                        continue
 
                     if "error" in key:
                         data.success = False
+
+                    trimmed_key = key.removeprefix(f"{data.type}.")
+                    data.properties[trimmed_key] = sd.attributes.get(key)
+                    predefined_props.add(key)
 
                 # if f"{data.type}.query" in sd.attributes:
                 #     data.data = sd.attributes.pop(f"{data.type}.query")
@@ -138,7 +151,7 @@ class Exporter(AzureExporter):
         # TODO: tracestate, tags
         for key in sd.attributes:
             # This removes redundant data from ApplicationInsights
-            if key.startswith('http.'):
+            if key.startswith('http.') or key in predefined_props:
                 continue
             data.properties[key] = sd.attributes[key]
         return envelope
