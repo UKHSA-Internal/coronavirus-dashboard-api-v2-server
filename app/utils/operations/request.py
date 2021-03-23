@@ -153,7 +153,7 @@ class Request:
             # Released metrics only.
             filters += " AND mr.released IS TRUE\n"
 
-        if self.area_code is not None:
+        if self.area_code is not None and self.area_type != "msoa":
             filters += f" AND ar.area_code = $3"
 
         if self.method == RequestMethod.Get:
@@ -180,10 +180,13 @@ class Request:
                 )
             else:
                 # When no nested metric is present in `self.metric`:
-                if self.area_type == "msoa":
+                # print(self.area_type)
+                if self.area_type != "msoa":
+                    query = const.DBQueries.main_data
+                elif self.area_type == "msoa" and self.area_code is None:
                     query = const.DBQueries.nested_object
                 else:
-                    query = const.DBQueries.main_data
+                    query = const.DBQueries.nested_object_with_area_code
 
                 query = query.substitute(partition=self.partition_id, filters=filters)
 
