@@ -21,7 +21,6 @@ __all__ = [
     'DATA_TYPES',
     'ENVIRONMENT',
     'BASE_DIR'
-    # 'RequestMethod'
 ]
 
 
@@ -31,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def to_template(text: str) -> Template:
-    return Template(re.sub(r"[\n\t\s]+", " ", text, flags=re.MULTILINE))
+    return Template(re.sub(r"[\n\t\s]+", " ", text, flags=re.MULTILINE).strip())
 
 
 class DBQueries(NamedTuple):
@@ -74,6 +73,27 @@ WHERE
        mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
+  $filters""")
+
+    nested_object_with_area_code = to_template("""\
+SELECT
+    ar.area_type                                                     AS "areaType",
+    area_code                                                        AS "areaCode",
+    area_name                                                        AS "areaName",
+    date::VARCHAR                                                    AS date,
+    mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) AS metric,
+    ts_obj.value                                                     AS value
+FROM covid19.time_series_p${partition} AS ts
+    JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
+    JOIN covid19.release_reference AS rr  ON rr.id = release_id
+    JOIN covid19.area_reference    AS ar  ON ar.id = area_id
+    JOIN covid19.area_relation     AS arel ON arel.child_id = ar.id,
+JSONB_EACH(payload) AS ts_obj
+WHERE
+       mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
+  AND rr.released IS TRUE
+  AND ar.area_type = $$2
+  AND arel.parent_id IN (SELECT id FROM covid19.area_reference WHERE area_code = $$3)
   $filters""")
 
     nested_array = to_template("""\
