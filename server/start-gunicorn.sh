@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#! /usr/bin/env bash
 set -e
 
 if [ -f /app/app/main.py ]; then
@@ -20,6 +20,8 @@ fi
 export GUNICORN_CONF=${GUNICORN_CONF:-$DEFAULT_GUNICORN_CONF}
 export WORKER_CLASS=${WORKER_CLASS:-"uvicorn.workers.UvicornWorker"}
 
+echo "Using Uvicorn work: ${WORKER_CLASS}"
+
 # If there's a prestart.sh script in the /app directory or other path specified, run it before starting
 PRE_START_PATH=${PRE_START_PATH:-/app/prestart.sh}
 echo "Checking for script in $PRE_START_PATH"
@@ -31,4 +33,4 @@ else
 fi
 
 # Start Gunicorn
-exec gunicorn -c "$GUNICORN_CONF" "$APP_MODULE"
+exec gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE"
