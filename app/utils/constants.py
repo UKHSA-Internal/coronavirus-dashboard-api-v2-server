@@ -54,7 +54,8 @@ WHERE
       metric = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY ts.area_id DESC, ts.date DESC""")
 
     nested_object = to_template("""\
 SELECT
@@ -73,7 +74,8 @@ WHERE
        mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY ts.area_id DESC, ts.date DESC""")
 
     nested_object_with_area_code = to_template("""\
 SELECT
@@ -94,7 +96,8 @@ WHERE
   AND rr.released IS TRUE
   AND ar.area_type = $$2
   AND arel.parent_id IN (SELECT id FROM covid19.area_reference WHERE area_code = $$3)
-  $filters""")
+  $filters
+ORDER BY ts.area_id DESC, ts.date DESC""")
 
     nested_array = to_template("""\
 SELECT
@@ -112,7 +115,8 @@ WHERE
       metric = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  $filters""")
+  $filters
+ORDER BY area_id DESC, date DESC""")
 
     # noinspection SqlResolve,SqlNoDataSourceInspection
     exists = to_template("""\
