@@ -6,6 +6,7 @@
 from typing import Dict, Iterable, List
 from functools import wraps
 from tempfile import NamedTemporaryFile
+from asyncio import Lock
 
 # 3rd party:
 from pandas import DataFrame
@@ -116,14 +117,28 @@ def format_data(df: DataFrame, response_metrics: Iterable[str]) -> DataFrame:
     return df
 
 
-def format_response(df: DataFrame, response_type: str,
+def format_response(df: DataFrame, response_type: str, request: Request,
                     include_header: bool = True) -> bytes:
     if response_type == 'csv':
-        csv_response = df.to_csv(
-            float_format="%.1f",
-            date_format="iso",
-            index=False,
-            header=include_header
+        base_metrics = ["areaCode", "areaName", "areaType", "date"]
+
+        if request.area_type == "msoa":
+            base_metrics = [
+                "regionCode", "regionName", "UtlaCode", "UtlaName", "LtlaCode", "LtlaName",
+                *base_metrics
+            ]
+
+        request_metrics = sorted(set(request.metric) - set(base_metrics))
+        metrics = [*base_metrics, *request_metrics]
+        csv_response = (
+            df
+            .loc[:, metrics]
+            .to_csv(
+                float_format="%.1f",
+                date_format="iso",
+                index=False,
+                header=include_header
+            )
         )
         return csv_response.encode()
 
