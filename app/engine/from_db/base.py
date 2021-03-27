@@ -95,6 +95,7 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
         yield prefix + format_response(
             func(values),
             response_type=request.format,
+            request=request,
             include_header=True
         )
 
@@ -108,6 +109,7 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             yield format_response(
                 data,
                 response_type=request.format,
+                request=request,
                 include_header=False
             )
 
