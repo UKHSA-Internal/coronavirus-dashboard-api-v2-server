@@ -1,54 +1,55 @@
 FROM python:3.9.2-buster
 LABEL maintainer="Pouria Hadjibagheri <Pouria.Hadjibagheri@phe.gov.uk>"
 
-# Gunicorn binding port
-ENV GUNICORN_PORT 5000
+ENV GUNICORN_PORT         5000
+ENV PYTHONPATH            /app
+ENV GUNICORN_CONF         /gunicorn_conf.py
 
-#COPY server/install-nginx.sh          /install-nginx.sh
-#
-#RUN bash /install-nginx.sh
-#RUN rm /etc/nginx/conf.d/default.conf
+# Uvicorn worker class
+ENV WORKER_CLASS_MODULE   uvicorn_worker
+ENV WORKER_CLASS          APIUvicornWorker
+# Import path
+ENV WORKER_CLASS          $WORKER_CLASS_MODULE.$WORKER_CLASS
+ENV WORKER_CLASS_PATH     /$WORKER_CLASS_MODULE.py
+
+ENV PRE_START_PATH        /prestart.sh
+ENV GUNICORN_START_PATH   /start-gunicorn.sh
 
 
-# Install Supervisord
-RUN apt-get update                             && \
-    apt-get upgrade -y --no-install-recommends && \
-#    apt-get install -y supervisor              && \
+RUN apt-get update                                                   && \
+    apt-get upgrade -y --no-install-recommends --no-install-suggests && \
     rm -rf /var/lib/apt/lists/*
 
-#COPY server/base.nginx               ./nginx.conf
-#COPY server/upload.nginx              /etc/nginx/conf.d/upload.conf
-#COPY server/engine.nginx              /etc/nginx/conf.d/engine.conf
+RUN addgroup --system --gid 102 app                                  && \
+    adduser  --system --disabled-login --ingroup app                    \
+             --no-create-home --home /nonexistent                       \
+             --gecos "app user" --shell /bin/false --uid 102 app
 
-COPY ./requirements.txt               /app/requirements.txt
+# Install app requirements
+COPY ./requirements.txt               /$PYTHONPATH/requirements.txt
 
-RUN python3 -m pip install --no-cache-dir -U pip                      && \
-    python3 -m pip install --no-cache-dir setuptools                  && \
-    python3 -m pip install -U --no-cache-dir -r /app/requirements.txt && \
-    rm /app/requirements.txt
+RUN python3 -m pip install --no-cache-dir -U pip                              && \
+    python3 -m pip install --no-cache-dir setuptools                          && \
+    python3 -m pip install -U --no-cache-dir -r /$PYTHONPATH/requirements.txt && \
+    rm /$PYTHONPATH/requirements.txt
 
 # Gunicorn config / entrypoint
-COPY server/gunicorn_conf.py          /gunicorn_conf.py
-COPY server/start-gunicorn.sh         /start-gunicorn.sh
-RUN chmod +x /start-gunicorn.sh
+COPY server/start-gunicorn.sh         $GUNICORN_START_PATH
+COPY server/gunicorn_conf.py          $GUNICORN_CONF
+COPY server/uvicorn_worker.py         $WORKER_CLASS_PATH
+COPY server/entrypoint.sh             /entrypoint.sh
 
-#COPY ./start-reload.sh /start-reload.sh
-#RUN chmod +x /start-reload.sh
+# Prestart script
+COPY server/prestart.py               $PRE_START_PATH
 
-# Custom Supervisord config
-#COPY server/supervisord.conf          /etc/supervisor/conf.d/supervisord.conf
+RUN chmod +x $PRE_START_PATH  && \
+    chmod +x /entrypoint.sh
 
-# Main service entrypoint - launches supervisord
-#COPY server/entrypoint.sh             /entrypoint.sh
-#RUN chmod +x /entrypoint.sh
+# Application
+COPY ./app        /$PYTHONPATH/app
 
+USER app
 
-WORKDIR /app
+EXPOSE $GUNICORN_PORT
 
-COPY ./app                           ./app
-
-ENV PYTHONPATH /app
-
-EXPOSE 5000
-
-ENTRYPOINT ["/start-gunicorn.sh"]
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
