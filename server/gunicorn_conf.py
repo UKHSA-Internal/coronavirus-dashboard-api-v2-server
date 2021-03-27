@@ -86,7 +86,7 @@ secure_scheme_headers = {
 }
 
 
-worker_class = 'app.uvicorn_worker.APIUvicornWorker'
+worker_class = getenv("WORKER_CLASS")
 
 
 # For debugging and testing
