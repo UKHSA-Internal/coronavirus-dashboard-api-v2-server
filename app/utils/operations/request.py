@@ -52,10 +52,12 @@ class Request:
         self.area_type = area_type
         self.release = datetime.strptime(release[:10], "%Y-%m-%d").date()
         self.format = format
-        self.metric = metric
         self.area_code = area_code
         self.method = method
         self.url = url
+
+        if len(metric) and ',' in metric[0]:
+            self.metric = metric[0].split(',')
 
         logger.info(dumps({"requestURL": str(url)}))
 
