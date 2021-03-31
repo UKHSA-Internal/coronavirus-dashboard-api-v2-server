@@ -80,7 +80,7 @@ class Connection:
 
     def __init__(self, conn_str=CONN_STR):
         self.conn_str = conn_str
-        self._connection = connect(self.conn_str)
+        self._connection = connect(self.conn_str, statement_cache_size=0)
 
     def __await__(self):
         yield from self._connection.__await__()
