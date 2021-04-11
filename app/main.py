@@ -8,7 +8,6 @@ from typing import Optional, List
 from inspect import isasyncgen
 from json import dumps
 from http import HTTPStatus
-from sys import stdout
 
 # 3rd party:
 from fastapi import (
@@ -17,20 +16,14 @@ from fastapi import (
     Response as APIResponse,
 )
 from fastapi.responses import StreamingResponse
-from fastapi.middleware.gzip import GZipMiddleware
 
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-
-from opencensus.trace.samplers import AlwaysOnSampler
-
-# Internal: 
+# Internal:
+from app.startup import start_app
 from app.utils.operations import Response, Request
-from app.utils.assets import RequestMethod, add_cloud_role_name
+from app.utils.assets import RequestMethod
 from app.exceptions import APIException
 from app.engine import get_data, run_healthcheck
-from app.middleware.tracers.starlette import TraceRequestMiddleware
 from app.config import Settings
-from app.exceptions.handlers import exception_handlers
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -41,43 +34,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-logging_instances = [
-    [logger, logging.INFO],
-    [logging.getLogger('uvicorn'), logging.WARNING],
-    [logging.getLogger('uvicorn.access'), logging.WARNING],
-    [logging.getLogger('uvicorn.error'), logging.ERROR],
-    [logging.getLogger('azure'), logging.WARNING],
-    [logging.getLogger('gunicorn'), logging.WARNING],
-    [logging.getLogger('gunicorn.access'), logging.WARNING],
-    [logging.getLogger('gunicorn.error'), logging.ERROR],
-    [logging.getLogger('asyncpg'), logging.WARNING],
-]
-
-
-app = FastAPI(
-    title="UK Coronavirus Dashboard - API Service",
-    version="2.1.0",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url="/api/v2/openapi.json",
-    exception_handlers=exception_handlers
-)
-
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=Settings.service_domain)
-
-app.add_middleware(
-    TraceRequestMiddleware,
-    sampler=AlwaysOnSampler(),
-    instrumentation_key=Settings.instrumentation_key,
-    cloud_role_name=add_cloud_role_name,
-    extra_attrs=dict(
-        environment=Settings.ENVIRONMENT,
-        server_location=Settings.server_location
-    ),
-    logging_instances=logging_instances
-)
-
-app.add_middleware(GZipMiddleware)
+app = start_app()
 
 
 @app.get("/api/v2/data")
