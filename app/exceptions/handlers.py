@@ -5,9 +5,9 @@
 # Python:
 from logging import getLogger
 from http import HTTPStatus
-from starlette.requests import Request
 
 # 3rd party:
+from fastapi import Request
 from fastapi.responses import JSONResponse
 
 # Internal:
@@ -25,7 +25,7 @@ logger = getLogger(__name__)
 
 async def handle_404(request: Request, exc, **context):
     status = HTTPStatus.NOT_FOUND
-    status_code = getattr(status, "value", 404)
+    status_code = getattr(status, "value", status.real)
     status_detail = getattr(status, "phrase", "Not Found")
 
     custom_dims = dict(
@@ -57,10 +57,11 @@ async def handle_404(request: Request, exc, **context):
 async def handle_500(request: Request, exc, **context):
     if hasattr(exc, "status_code"):
         status_code = getattr(exc, "status_code")
-        status_detail = getattr(exc, "phrase", "detail")
+        detail = getattr(exc, "detail", str())
+        status_detail = getattr(exc, "phrase", detail)
     else:
         status = HTTPStatus.INTERNAL_SERVER_ERROR
-        status_code = getattr(status, "value", 500)
+        status_code = getattr(status, "value", status.real)
         status_detail = getattr(status, "phrase", "Internal Server Error")
 
     custom_dims = dict(
