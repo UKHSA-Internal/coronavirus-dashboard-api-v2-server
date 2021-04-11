@@ -91,6 +91,13 @@ class MetricData:
     # Non-default DB partition suffixes (area types in lower case).
     single_partition_types = {"utla", "ltla", "nhstrust", "msoa"}
 
+    nested_struct = {
+        "newCasesBySpecimenDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
+        "newCasesByPublishDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
+        "newDeaths28DaysByDeathDateAgeDemographics": ["age", "deaths", "rollingSum", "rollingRate"],
+        "cumAdmissionsByAge": ["age", "rate", "value"]
+    }
+
 
 def add_cloud_role_name(envelope):
     envelope.tags['ai.cloud.role'] = Settings.cloud_role_name
