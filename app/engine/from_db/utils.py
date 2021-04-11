@@ -128,8 +128,13 @@ def format_response(df: DataFrame, response_type: str, request: Request,
                 *base_metrics
             ]
 
-        request_metrics = sorted(set(request.metric) - set(base_metrics))
-        metrics = [*base_metrics, *request_metrics]
+        if not len(request.nested_metrics):
+            request_metrics = sorted(set(request.metric) - set(base_metrics))
+            metrics = [*base_metrics, *request_metrics]
+        else:
+            nested_metric = request.nested_metrics[0]
+            metrics = [*base_metrics, *MetricData.nested_struct[nested_metric]]
+
         csv_response = (
             df
             .loc[:, metrics]
