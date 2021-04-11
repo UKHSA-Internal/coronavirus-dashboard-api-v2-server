@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-logger = getLogger('COVID19-APIv2')
+logger = getLogger('app')
 
 ENVIRONMENT = getenv("API_ENV", "PRODUCTION")
 

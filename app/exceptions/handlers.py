@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-logger = getLogger(__name__)
+logger = getLogger("app")
 
 
 async def handle_404(request: Request, exc, **context):

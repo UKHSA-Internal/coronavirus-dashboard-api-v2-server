@@ -53,7 +53,7 @@ __all__ = [
 ]
 
 
-logger = getLogger(__name__)
+logger = getLogger("app")
 
 
 def get_closest_match(value: str, options: Iterable[str]) -> str:

@@ -13,6 +13,7 @@ Contributors:  Pouria Hadjibagheri
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
 from asyncio import get_event_loop, wait
+from logging import getLogger
 
 # 3rd party:
 
@@ -33,17 +34,28 @@ __all__ = [
 ]
 
 
+logger = getLogger("app")
+
+
 async def test_db():
-    async with Connection() as conn:
-        db_active = await conn.fetchval("SELECT NOW() AS timestamp;")
+    try:
+        async with Connection() as conn:
+            db_active = await conn.fetchval("SELECT NOW() AS timestamp;")
+    except Exception as err:
+        logger.exception(err, exc_info=True)
+        raise err
 
     return {"db": f"healthy - {db_active}"}
 
 
 async def test_storage():
-    async with AsyncStorageClient("pipeline", "info/seen") as blob_client:
-        blob = await blob_client.download()
-        blob_data = await blob.readall()
+    try:
+        async with AsyncStorageClient("pipeline", "info/seen") as blob_client:
+            blob = await blob_client.download()
+            blob_data = await blob.readall()
+    except Exception as err:
+        logger.exception(err, exc_info=True)
+        raise err
 
     return {"storage": f"healthy - {blob_data.decode()}"}
 

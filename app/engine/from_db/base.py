@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-logger = getLogger('COVID19-APIv2')
+logger = getLogger('app')
 
 
 # Row limit for DB queries.
