@@ -47,7 +47,7 @@ class Request:
     _nested_metrics: list[str]
     _db_query: str
 
-    def __init__(self, area_type: str, release: str, format: str, metric: list[str],
+    def __init__(self, area_type: str, release: str, format: str, metric: Union[list[str], str],
                  area_code: str, method: str, url: URL):
         self.area_type = area_type
         self.release = datetime.strptime(release[:10], "%Y-%m-%d").date()
@@ -56,8 +56,12 @@ class Request:
         self.method = method
         self.url = url
 
-        if len(metric) and ',' in metric[0]:
+        if isinstance(metric, list) and len(metric) and ',' in metric[0]:
             self.metric = metric[0].split(',')
+        elif isinstance(metric, list) and len(metric):
+            self.metric = metric
+        else:
+            raise InvalidQuery(details="Invalid metric. Must be one or more metric names.")
 
         logger.info(dumps({"requestURL": str(url)}))
 
