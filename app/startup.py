@@ -4,6 +4,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
 import logging
+from sys import stdout
 
 # 3rd party:
 from fastapi import FastAPI
@@ -57,6 +58,13 @@ def start_app():
         ),
         Middleware(GZipMiddleware)
     ]
+
+    if Settings.DEBUG:
+        handler = logging.StreamHandler(stdout)
+
+        for log, level in logging_instances:
+            log.addHandler(handler)
+            log.setLevel(level)
 
     app = FastAPI(
         title="UK Coronavirus Dashboard - API Service",
