@@ -99,9 +99,6 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             include_header=True
         )
 
-        # Move cursor forward for the next iteration.
-        await cursor.forward(RESPONSE_LIMIT)
-
         # Yielding the rest of the data.
         while len(values := await cursor.fetch(RESPONSE_LIMIT)) > 0:
             data = func(values)
@@ -112,9 +109,6 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
                 request=request,
                 include_header=False
             )
-
-            # Move cursor forward for the next iteration.
-            await cursor.forward(RESPONSE_LIMIT)
 
     # Yielding the closing chunk, which needs to be separate
     # for data with a different ending - e.g. JSON.
