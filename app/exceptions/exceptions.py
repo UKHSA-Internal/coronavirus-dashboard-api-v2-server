@@ -22,11 +22,12 @@ from http import HTTPStatus
 from string import Template
 from difflib import SequenceMatcher
 from typing import Iterable
+from logging import getLogger
 
 # 3rd party:
+from fastapi.exceptions import HTTPException
 
 # Internal:
-# from .constants import DATA_TYPES
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Header
@@ -50,6 +51,9 @@ __all__ = [
     'StructureTooLarge',
     'BadRequest'
 ]
+
+
+logger = getLogger(__name__)
 
 
 def get_closest_match(value: str, options: Iterable[str]) -> str:
@@ -84,12 +88,13 @@ def get_closest_match(value: str, options: Iterable[str]) -> str:
     return max_ratio_name
 
 
-class APIException(RuntimeError):
+class APIException(HTTPException):
     message = str()
     code: HTTPStatus
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.message = Template(self.message).substitute(**kwargs)
+        super().__init__(status_code=self.code, detail=self.message)
 
 
 class InvalidQueryParameter(APIException):
