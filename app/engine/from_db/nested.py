@@ -11,15 +11,9 @@ from pandas import DataFrame, json_normalize
 
 # Internal:
 from app.utils.operations import Request
+from app.utils.assets import MetricData
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-NESTED_STRUCT = {
-    "newCasesBySpecimenDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
-    "newCasesByPublishDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
-    "newDeaths28DaysByDeathDateAgeDemographics": ["age", "deaths", "rollingSum", "rollingRate"],
-}
 
 
 def process_nested_data(results: Iterable[Record], request: Request) -> DataFrame:
@@ -32,15 +26,16 @@ def process_nested_data(results: Iterable[Record], request: Request) -> DataFram
         df = json_normalize(
             map(dict, results),
             nested_metric_name,
-            [*base_columns, NESTED_STRUCT[nested_metric_name]],
+            [*base_columns, MetricData.nested_struct[nested_metric_name]],
             errors='ignore'
         )
+
         df.rename(
             columns={col: col.removeprefix(f"{nested_metric_name}.") for col in df.columns},
             inplace=True
         )
-        columns = [*base_columns, *NESTED_STRUCT[nested_metric_name]]
 
+        columns = [*base_columns, *MetricData.nested_struct[nested_metric_name]]
     else:
         df = DataFrame(
             results,
