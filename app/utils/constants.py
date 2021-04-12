@@ -97,7 +97,10 @@ WHERE
        mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
   AND rr.released IS TRUE
   AND ar.area_type = $$2
-  AND arel.parent_id = ANY($$3::INT[])
+  AND (
+       arel.parent_id = ANY($$3::INT[])
+    OR ts.area_id = ANY($$3::INT[])
+  )
   $filters
 ORDER BY ts.date DESC""")
 
