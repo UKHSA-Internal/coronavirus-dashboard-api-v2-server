@@ -5,7 +5,7 @@
 # Python:
 from os import getenv
 from logging import getLogger
-from typing import Union
+from typing import Union, Any, Iterator
 from datetime import date, datetime
 from json import dumps
 from hashlib import blake2b
@@ -29,6 +29,13 @@ __all__ = [
 logger = getLogger('app')
 
 ENVIRONMENT = getenv("API_ENV", "PRODUCTION")
+
+
+def to_chunks(iterable: list[Any], n_chunk: int) -> Iterator[list[Any]]:
+    n_data = len(iterable)
+
+    for index in range(0, n_data, n_chunk):
+        yield iterable[index: index + n_chunk]
 
 
 class Request:
@@ -115,12 +122,9 @@ class Request:
         if (db_args := getattr(self, '_db_args', None)) is not None:
             return db_args
 
-        db_args = [list(self.db_metrics), self.area_type]
+        db_args = list(self.db_metrics)
 
-        if self.area_code is not None:
-            db_args.append(self.area_code)
-
-        self._db_args = db_args
+        self._db_args = [db_args, self.area_type]
 
         logger.info(dumps({"arguments": self._db_args}, default=json_formatter))
 
@@ -148,6 +152,20 @@ class Request:
 
         return self._nested_metrics
 
+    async def get_query_area_codes(self, conn):
+        if not self.area_code:
+            area_type = self.area_type if self.area_type != "msoa" else "region"
+            area_ids = await conn.fetch(const.DBQueries.area_id_by_type, area_type)
+        else:
+            area_ids = await conn.fetch(const.DBQueries.area_id_by_code, self.area_code)
+
+        batch_partitions = MetricData.single_partition_types - {"msoa"}
+
+        if self.area_code or self.area_type not in batch_partitions:
+            return area_ids
+        else:
+            return to_chunks(area_ids, 15)
+
     @property
     def db_query(self) -> str:
         if (db_query := getattr(self, '_db_query', None)) is not None:
@@ -158,9 +176,6 @@ class Request:
         if ENVIRONMENT != "DEVELOPMENT":
             # Released metrics only.
             filters += " AND mr.released IS TRUE\n"
-
-        if self.area_code is not None and self.area_type != "msoa":
-            filters += f" AND ar.area_code = $3"
 
         if self.method == RequestMethod.Get:
             if self.nested_metrics and len(self.nested_metrics) == len(self.metric) == 1:
@@ -186,11 +201,8 @@ class Request:
                 )
             else:
                 # When no nested metric is present in `self.metric`:
-                # print(self.area_type)
                 if self.area_type != "msoa":
                     query = const.DBQueries.main_data
-                elif self.area_type == "msoa" and self.area_code is None:
-                    query = const.DBQueries.nested_object
                 else:
                     query = const.DBQueries.nested_object_with_area_code
 
