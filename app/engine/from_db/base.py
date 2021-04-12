@@ -83,31 +83,23 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
 
     # We use cursor movements instead of offset-limit. This is faster
     # as the DB won't have to iterate to fine the offset location.
-    async with Connection() as conn, conn.transaction(readonly=True):
-        # Set query
-        cursor = await conn.cursor(request.db_query, *request.db_args)
+    async with Connection() as conn:
+        area_codes = await request.get_query_area_codes(conn)
 
-        # Set limit on cursor
-        values = await cursor.fetch(RESPONSE_LIMIT)
+        yield prefix
 
-        # Yielding the opening chunk, which needs to be separate
-        # for data with a different header - e.g. CSV.
-        yield prefix + format_response(
-            func(values),
-            response_type=request.format,
-            request=request,
-            include_header=True
-        )
+        # Fetching data from the DB.
+        for index, area_codes in enumerate(area_codes):
+            result = await conn.fetch(request.db_query, *request.db_args, area_codes)
 
-        # Yielding the rest of the data.
-        while len(values := await cursor.fetch(RESPONSE_LIMIT)) > 0:
-            data = func(values)
+            if not len(result):
+                continue
 
             yield format_response(
-                data,
+                func(result),
                 response_type=request.format,
                 request=request,
-                include_header=False
+                include_header=index == 0
             )
 
     # Yielding the closing chunk, which needs to be separate
