@@ -14,7 +14,7 @@ ENV WORKER_CLASS_PATH     /$WORKER_CLASS_MODULE.py
 
 ENV PRE_START_PATH        /prestart.sh
 ENV GUNICORN_START_PATH   /start-gunicorn.sh
-
+ENV NUMEXPR_MAX_THREADS   1
 
 RUN apt-get update                                                   && \
     apt-get upgrade -y --no-install-recommends --no-install-suggests && \
