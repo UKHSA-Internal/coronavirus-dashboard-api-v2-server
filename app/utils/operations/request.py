@@ -135,7 +135,8 @@ class Request:
         if (db_metrics := getattr(self, '_db_metrics', None)) is not None:
             return db_metrics
 
-        self._db_metrics = set(self.metric) - {"areaCode", "areaName", "areaType", "date"}
+        valid_metrics = filter(lambda m: m in const.DATA_TYPES, self.metric)
+        self._db_metrics = set(valid_metrics) - set(MetricData.base_metrics)
 
         logger.info(dumps({"metrics": list(self._db_metrics)}))
 
