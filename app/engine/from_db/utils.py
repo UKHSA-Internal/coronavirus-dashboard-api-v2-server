@@ -3,10 +3,9 @@
 # Imports
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable
 from functools import wraps
 from tempfile import NamedTemporaryFile
-from asyncio import Lock
 
 # 3rd party:
 from pandas import DataFrame
@@ -150,7 +149,7 @@ def format_response(df: DataFrame, response_type: str, request: Request,
     df_dict = df.to_dict(orient='records')
 
     if response_type == 'jsonl':
-        df_jsonl_gen: List[bytes] = list(map(dumps, df_dict))
+        df_jsonl_gen: list[bytes] = list(map(dumps, df_dict))
         return bytes.join(b"\n", df_jsonl_gen)
 
     json_response = dumps(df_dict)
