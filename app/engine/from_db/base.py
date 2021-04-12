@@ -88,6 +88,7 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
 
         yield prefix
 
+        header_generated = False
         # Fetching data from the DB.
         for index, area_codes in enumerate(area_codes):
             result = await conn.fetch(request.db_query, *request.db_args, area_codes)
@@ -99,8 +100,10 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
                 func(result),
                 response_type=request.format,
                 request=request,
-                include_header=index == 0
+                include_header=not header_generated
             )
+
+            header_generated = True
 
     # Yielding the closing chunk, which needs to be separate
     # for data with a different ending - e.g. JSON.
