@@ -89,6 +89,7 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
         yield prefix
 
         header_generated = False
+
         # Fetching data from the DB.
         for index, area_codes in enumerate(area_codes):
             result = await conn.fetch(request.db_query, *request.db_args, area_codes)
@@ -96,7 +97,12 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             if not len(result):
                 continue
 
-            yield format_response(
+            if header_generated and request.format not in ['csv', 'jsonl']:
+                item_prefix = b","
+            else:
+                item_prefix = b""
+
+            yield item_prefix + format_response(
                 func(result),
                 response_type=request.format,
                 request=request,
