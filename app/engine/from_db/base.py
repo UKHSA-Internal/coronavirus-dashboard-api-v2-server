@@ -102,12 +102,14 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             else:
                 item_prefix = b""
 
-            yield item_prefix + format_response(
+            res = item_prefix + format_response(
                 func(result),
                 response_type=request.format,
                 request=request,
                 include_header=not header_generated
             )
+
+            yield res
 
             header_generated = True
 
@@ -128,6 +130,12 @@ async def from_cache_or_db(request: Request) -> AsyncGenerator[bytes, None]:
                 await sleep(wait_period)
                 wait_counter += 1
                 continue
+
+            # Dismiss cache below 100 bytes - it'll likely be an empty file.
+            props = await blob_client.client.get_blob_properties()
+            if props['size'] < 100:
+                wait_counter = 0
+                break
 
             # Compose a temp file for upload to storage. The temp
             # file needs to be named for asyncio support.
