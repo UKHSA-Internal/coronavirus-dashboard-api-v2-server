@@ -153,7 +153,7 @@ def format_response(df: DataFrame, response_type: str, request: Request,
 
     if response_type == 'jsonl':
         df_jsonl_gen: list[bytes] = list(map(dumps, df_dict))
-        return bytes.join(b"\n", df_jsonl_gen)
+        return bytes.join(b"\n", df_jsonl_gen) + b"\n"
 
     json_response = dumps(df_dict)
 
