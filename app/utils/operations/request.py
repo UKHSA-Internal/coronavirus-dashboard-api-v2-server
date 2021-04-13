@@ -58,7 +58,7 @@ class Request:
                  area_code: str, method: str, url: URL):
         self.area_type = area_type
         self.release = datetime.strptime(release[:10], "%Y-%m-%d").date()
-        self.format = format
+        self.format = format.lower()
         self.area_code = area_code
         self.method = method
         self.url = url
