@@ -108,7 +108,7 @@ class Request:
 
         area_type = self.area_type.lower()
 
-        if self.area_type not in MetricData.single_partition_types:
+        if area_type not in MetricData.single_partition_types:
             area_type = "other"  # Default DB partition suffix.
 
         self._partition_id = f"{self.release:%Y_%-m_%-d}_{area_type}"
