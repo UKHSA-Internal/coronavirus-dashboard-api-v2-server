@@ -14,7 +14,7 @@ from hashlib import blake2b
 from starlette.datastructures import URL
 
 # Internal:
-from app.exceptions import InvalidQuery, BadRequest
+from app.exceptions import InvalidQuery, BadRequest, StructureTooLarge
 from .. import constants as const
 from ..assets import RequestMethod, MetricData
 from ..formatters import json_formatter
@@ -69,6 +69,9 @@ class Request:
             self.metric = metric
         else:
             raise InvalidQuery(details="Invalid metric. Must be one or more metric names.")
+
+        if len(metric) > 5:
+            raise StructureTooLarge(max_allowed=5, current_count=len(metric))
 
         logger.info(dumps({"requestURL": str(url)}))
 
