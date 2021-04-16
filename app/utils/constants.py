@@ -80,29 +80,45 @@ WHERE
 ORDER BY ts.date DESC""")
 
     nested_object_with_area_code = to_template("""\
-SELECT
-    ar.area_type                                                     AS "areaType",
-    area_code                                                        AS "areaCode",
-    area_name                                                        AS "areaName",
-    date::VARCHAR                                                    AS date,
-    mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) AS metric,
-    ts_obj.value                                                     AS value
-FROM covid19.time_series_p${partition} AS ts
-    JOIN covid19.metric_reference  AS mr  ON mr.id = metric_id
-    JOIN covid19.release_reference AS rr  ON rr.id = release_id
-    JOIN covid19.area_reference    AS ar  ON ar.id = area_id
-    JOIN covid19.area_relation     AS arel ON arel.child_id = ar.id,
-      JSONB_EACH(payload) AS ts_obj
-WHERE
-       mr.metric || UPPER(LEFT(ts_obj.key, 1)) || RIGHT(ts_obj.key, -1) = ANY($$1::VARCHAR[])
-  AND rr.released IS TRUE
-  AND ar.area_type = $$2
-  AND (
-       arel.parent_id = ANY($$3::INT[])
-    OR ts.area_id = ANY($$3::INT[])
-  )
-  $filters
-ORDER BY ts.date DESC""")
+SELECT *
+FROM
+(
+     SELECT area_type,
+            area_code,
+            area_name,
+            date,
+            metric || UPPER(LEFT(key, 1)) || RIGHT(key, -1) AS metric,
+            value
+     FROM covid19.time_series_p2021_4_15_msoa AS ts
+         JOIN covid19.metric_reference  AS mr ON mr.id = metric_id
+         JOIN covid19.release_reference AS rr ON rr.id = release_id
+         JOIN covid19.area_reference    AS ar ON ar.id = area_id
+         JOIN covid19.area_relation     AS arel ON arel.child_id = area_id,
+           JSONB_EACH(payload)
+     WHERE area_type = $$2
+       AND metric || UPPER(LEFT(key, 1)) || RIGHT(key, -1) = ANY ($$1::VARCHAR[])
+       AND rr.released IS TRUE
+       AND parent_id = ANY ($$3::INT[])
+     UNION
+     (
+          SELECT area_type,
+                 area_code,
+                 area_name,
+                 date,
+                 metric || UPPER(LEFT(key, 1)) || RIGHT(key, -1) AS metric,
+                 value
+          FROM covid19.time_series_p2021_4_15_msoa AS ts
+              JOIN covid19.metric_reference  AS mr ON mr.id = metric_id
+              JOIN covid19.release_reference AS rr ON rr.id = release_id
+              JOIN covid19.area_reference    AS ar ON ar.id = area_id,
+                JSONB_EACH(payload)
+          WHERE area_type = $$2
+            AND metric || UPPER(LEFT(key, 1)) || RIGHT(key, -1) = ANY($$1::VARCHAR[])
+            AND rr.released IS TRUE
+            AND area_id = ANY ($$3::INT[])
+    )
+) AS result
+ORDER BY result.date DESC""")
 
     nested_array = to_template("""\
 SELECT
@@ -139,8 +155,8 @@ WHERE
   $filters
 FETCH FIRST 1 ROW ONLY""")
 
-    area_id_by_type = "SELECT id FROM covid19.area_reference WHERE area_type = $1"
-    area_id_by_code = "SELECT id FROM covid19.area_reference WHERE area_code = $1"
+    area_id_by_type = "SELECT MIN(id) FROM covid19.area_reference WHERE area_type = $1 GROUP BY area_code"
+    area_id_by_code = "SELECT MIN(id) FROM covid19.area_reference WHERE area_code = $1 GROUP BY area_code"
 
 
 DATA_TYPES: Dict[str, Callable[[str], Any]] = {
