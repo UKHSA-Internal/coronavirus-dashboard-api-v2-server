@@ -85,15 +85,14 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
     # as the DB won't have to iterate to fine the offset location.
     async with Connection() as conn:
         area_codes = await request.get_query_area_codes(conn)
-
         yield prefix
 
         header_generated = False
 
         # Fetching data from the DB.
-        for index, area_codes in enumerate(area_codes):
-            result = await conn.fetch(request.db_query, *request.db_args, area_codes)
+        for index, codes in enumerate(area_codes):
 
+            result = await conn.fetch(request.db_query, *request.db_args, codes)
             if not len(result):
                 continue
 
