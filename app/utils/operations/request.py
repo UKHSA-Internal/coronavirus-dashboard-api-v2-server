@@ -155,13 +155,15 @@ class Request:
 
     async def get_query_area_codes(self, conn):
         if not self.area_code:
-            area_type = self.area_type if self.area_type != "msoa" else "region"
+            area_type = self.area_type if self.area_type != "msoa" else "utla"
             area_ids = await conn.fetch(const.DBQueries.area_id_by_type, area_type)
         else:
             area_ids = await conn.fetch(const.DBQueries.area_id_by_code, self.area_code)
 
         batch_partitions = MetricData.single_partition_types - {"msoa"}
 
+        if not self.area_code and self.area_type == "msoa":
+            return to_chunks(area_ids, 5)
         if self.area_code or self.area_type not in batch_partitions:
             return area_ids
         else:
