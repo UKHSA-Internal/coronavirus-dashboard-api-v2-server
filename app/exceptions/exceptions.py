@@ -217,7 +217,7 @@ class BadRequest(APIException):
 class StructureTooLarge(APIException):
     message = (
         'You may only request a maximum number of $max_allowed metrics per '
-        'request. Current number of metrics in your structure: $current_count '
+        'request. Current number of metrics in your query: $current_count '
         '- please reduce the number of metrics and try again.'
     )
     code = HTTPStatus.REQUEST_ENTITY_TOO_LARGE
