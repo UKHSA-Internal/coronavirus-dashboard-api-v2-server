@@ -37,7 +37,7 @@ def process_generic_data(results: Iterable[Record], request: Request) -> DataFra
             values="value",
             index=MetricData.base_metrics,
             columns="metric",
-            dropna=False,
+            # dropna=False,
             aggfunc='first'
         )
         .reset_index()
