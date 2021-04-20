@@ -70,8 +70,8 @@ class Request:
         else:
             raise InvalidQuery(details="Invalid metric. Must be one or more metric names.")
 
-        if len(metric) > 5:
-            raise StructureTooLarge(max_allowed=5, current_count=len(metric))
+        if (n_metric := len(self.metric)) > 5:
+            raise StructureTooLarge(max_allowed=5, current_count=n_metric)
 
         logger.info(dumps({"requestURL": str(url)}))
 
