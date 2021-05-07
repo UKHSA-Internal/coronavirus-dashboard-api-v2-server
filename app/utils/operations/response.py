@@ -22,7 +22,7 @@ __all__ = [
 
 
 API_PREFIX = "/api/"
-API_URL = f"api.{getenv('URL_LOCATION', str())}"
+API_URL = getenv('URL_LOCATION', str())
 
 ResponseContentType = Union[None, bytes, AsyncGenerator[bytes, None]]
 
@@ -36,7 +36,7 @@ class RedirectResponse:
     }
 
     def __init__(self, request, container, path):
-        self.location = f"{container}/{path}"
+        self.location = f"https://{API_URL}/downloads/{container}/{path}"
 
         url_path = request.url.path.removeprefix(API_PREFIX)
         permalink = f"https://{API_URL}/apiv2cache/{request.path}"
