@@ -61,8 +61,9 @@ class Request:
         'csv': 'text/csv; charset=utf-8'
     }
 
-    def __init__(self, area_type: str, release: str, format: str, metric: Union[list[str], str],
+    def __init__(self, request, area_type: str, release: str, format: str, metric: Union[list[str], str],
                  area_code: str, method: str, url: URL):
+        self.base_request = request
         self.area_type = area_type
         self.release = datetime.strptime(release[:10], "%Y-%m-%d").date()
         self.format = format.lower()

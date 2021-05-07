@@ -43,6 +43,7 @@ async def main(req: APIRequest,
                areaCode: Optional[str] = Query(None, max_length=10, title="Area code")):
 
     request = Request(
+        request=req,
         area_type=areaType,
         release=release,
         format=format,
