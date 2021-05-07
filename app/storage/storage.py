@@ -25,6 +25,8 @@ from azure.storage.blob.aio import (
     BlobLeaseClient as AsyncBlobLeaseClient
 )
 
+from azure.core.exceptions import HttpResponseError
+
 # Internal:
 from app.middleware.tracers.utils import trace_async_method_operation
 
@@ -43,6 +45,8 @@ STORAGE_CONNECTION_STRING = getenv("DeploymentBlobStorage")
 DEFAULT_CONTENT_TYPE = "application/json; charset=utf-8"
 DEFAULT_CACHE_CONTROL = "no-cache, max-age=0, stale-while-revalidate=300"
 CONTENT_LANGUAGE = 'en-GB'
+
+logger = logging.getLogger("app")
 
 
 class LockBlob:
@@ -574,4 +578,7 @@ class AsyncStorageClient:
         operation="PUT"
     )
     async def set_tags(self, tags: dict[str, str]):
-        return await self.client.set_blob_tags(tags)
+        try:
+            return await self.client.set_blob_tags(tags)
+        except HttpResponseError:
+            logger.warning("Failed to create tags.")

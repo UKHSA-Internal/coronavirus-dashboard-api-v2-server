@@ -54,6 +54,13 @@ class Request:
     _nested_metrics: list[str]
     _db_query: str
 
+    _content_types_lookup = {
+        'json': 'application/vnd.PHE-COVID19.v2+json; charset=utf-8',
+        'jsonl': 'application/vnd.PHE-COVID19.v2+jsonl; charset=utf-8',
+        'xml': 'application/vnd.PHE-COVID19.v1+json; charset=utf-8',
+        'csv': 'text/csv; charset=utf-8'
+    }
+
     def __init__(self, area_type: str, release: str, format: str, metric: Union[list[str], str],
                  area_code: str, method: str, url: URL):
         self.area_type = area_type
@@ -62,6 +69,7 @@ class Request:
         self.area_code = area_code
         self.method = method
         self.url = url
+        self.content_type = self._content_types_lookup[self.format]
 
         if isinstance(metric, list) and len(metric) and ',' in metric[0]:
             self.metric = metric[0].split(',')
@@ -91,7 +99,8 @@ class Request:
             path = f"{path}/{self.area_code}"
         else:
             path = f"{path}/complete"
-        path = f"{path}/{filename}.{self.format}"
+
+        path = f"{path}/{filename}.{self.format if self.format != 'xml' else 'json'}"
 
         self._path = path
 

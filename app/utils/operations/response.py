@@ -3,8 +3,9 @@
 # Imports
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
-from typing import Union, AsyncGenerator, Dict, NamedTuple
+from typing import Union, AsyncGenerator, Dict
 from datetime import datetime, date
+from os import getenv
 
 # 3rd party:
 
@@ -16,13 +17,39 @@ from .request import Request
 
 __all__ = [
     'Response',
+    "RedirectResponse"
 ]
 
 
 API_PREFIX = "/api/"
-API_URL = "api.coronavirus.data.gov.uk"
+API_URL = f"api.{getenv('URL_LOCATION', str())}"
 
 ResponseContentType = Union[None, bytes, AsyncGenerator[bytes, None]]
+
+
+class RedirectResponse:
+    _content_types_lookup = {
+        'json': 'application/vnd.PHE-COVID19.v2+json; charset=utf-8',
+        'jsonl': 'application/vnd.PHE-COVID19.v2+jsonl; charset=utf-8',
+        'xml': 'application/vnd.PHE-COVID19.v1+json; charset=utf-8',
+        'csv': 'text/csv; charset=utf-8'
+    }
+
+    def __init__(self, request, container, path):
+        self.location = f"{container}/{path}"
+
+        url_path = request.url.path.removeprefix(API_PREFIX)
+        permalink = f"https://{API_URL}/apiv2cache/{request.path}"
+
+        headers = {
+            'Content-Type': self._content_types_lookup[request.format]
+        }
+
+        self.headers = headers.update({
+            "Cache-Control": "public, max-age=90, must-revalidate",
+            "Content-Location": permalink,
+            "Content-Language": "en-GB"
+        })
 
 
 class Response:
@@ -55,14 +82,14 @@ class Response:
         return self._latest_timestamp
 
     @property
-    async def headers(self):
+    def headers(self):
         headers = {
             'Content-Type': self._content_types_lookup[self._content_type]
         }
 
         if self._content is not None:
             headers['Content-Disposition'] = (
-                f'attachment; filename="data_{self._release_date:%Y-%m-%d}.{self._content_type}"'
+                f'attachment; filename="{self._request.area_type}_{self._release_date:%Y-%m-%d}.{self._content_type}"'
             )
 
         # Additional headers for successful responses.

@@ -4,7 +4,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
 from logging import getLogger
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Union
 from http import HTTPStatus
 from functools import partial
 from asyncio import sleep
@@ -16,7 +16,7 @@ from aiofiles import open as aio_open
 
 # Internal:
 from app.exceptions import NotAvailable
-from app.utils.operations import Response, Request
+from app.utils.operations import Response, RedirectResponse, Request
 from app.utils.assets import RequestMethod
 from app.database import Connection
 from app.storage import AsyncStorageClient
@@ -69,23 +69,23 @@ def log_response(query, arguments):
     return process
 
 
-@cache_response
+# @cache_response
 async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[bytes, bytes]:
     if len(request.nested_metrics) > 0:
         func = partial(process_nested_data, request=request)
     else:
         func = partial(process_generic_data, request=request)
 
-    prefix, suffix = b"", b""
-
-    if request.format == 'json':
-        prefix, suffix = b'{"body":[', b']}'
+    # prefix, suffix = b"", b""
+    #
+    # if request.format == 'json':
+    #     prefix, suffix = b'{"body":[', b']}'
 
     # We use cursor movements instead of offset-limit. This is faster
     # as the DB won't have to iterate to fine the offset location.
     async with Connection() as conn:
         area_codes = await request.get_query_area_codes(conn)
-        yield prefix
+        # yield prefix
 
         header_generated = False
 
@@ -96,72 +96,76 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             if not len(result):
                 continue
 
-            if header_generated and request.format not in ['csv', 'jsonl']:
-                item_prefix = b","
-            else:
-                item_prefix = b""
-
-            res = item_prefix + format_response(
+            res = format_response(
                 func(result),
                 response_type=request.format,
                 request=request,
                 include_header=not header_generated
             )
 
-            yield res
+            yield index, res
 
             header_generated = True
 
     # Yielding the closing chunk, which needs to be separate
     # for data with a different ending - e.g. JSON.
-    yield suffix
+    # yield suffix
 
 
-async def from_cache_or_db(request: Request) -> AsyncGenerator[bytes, None]:
-    max_wait_cycles = 18  # Max wait: 3 minutes
+async def from_cache_or_db(request: Request) -> Union[Response, RedirectResponse]:
+    max_wait_cycles = 29  # Max wait: 4 minutes and 50 seconds
     wait_period = 10  # seconds
     wait_counter = 1
-    async with AsyncStorageClient("apiv2cache", request.path) as blob_client:
+
+    kws = {
+        "container": "apiv2cache",
+        "path": request.path,
+    }
+
+    cache_results = True
+
+    async with AsyncStorageClient(**kws) as blob_client:
         while await blob_client.exists() and wait_counter <= max_wait_cycles:
+            props = await blob_client.client.get_blob_tags()
+
             # Wait for the blob lease to be release until `max_wait_cycles`
             # is reached or the blob is removed.
-            if await blob_client.is_locked():
+            if await blob_client.is_locked() and props.get("in_progress", '1') == '1':
                 await sleep(wait_period)
                 wait_counter += 1
                 continue
-
-            # Dismiss cache below 100 bytes - it'll likely be an empty file.
-            props = await blob_client.client.get_blob_properties()
-            if props['size'] < 100:
-                wait_counter = 0
+            elif props.get('done', "0") != "1" and props.get('in_progress', '1') == '1':
+                await blob_client.delete()
+                cache_results = True
+                break
+            elif props.get('done', "0") == "1" and props.get('in_progress', '1') == '1':
+                cache_results = False
                 break
 
-            # Compose a temp file for upload to storage. The temp
-            # file needs to be named for asyncio support.
-            with NamedTemporaryFile(mode='w+b') as cache_file:
-                await blob_client.download_into(cache_file)
+    if cache_results:
+        await cache_response(process_get_request, request=request)
 
-                async with aio_open(cache_file.name, mode='rb') as reader:
-                    # Read 32 MB chunks
-                    while data := await reader.read(2**25):
-                        yield data
+    if request.format != "xml":
+        return RedirectResponse(request, "apiv2cache", request.path)
 
-            return
+    with NamedTemporaryFile(mode='w+b') as cache_file:
+        async with AsyncStorageClient(kws['container'], kws['path']) as cli:
+            await cli.download_into(cache_file)
 
-    # If after 3 minutes, the blob lease is not released,
-    # serve the request directly from the database.
-    cache_results = wait_counter != max_wait_cycles
-
-    # Run from the database and cache the results.
-    async for chunk in process_get_request(request=request, cache_results=cache_results):
-        yield chunk
+        return Response(
+            content=cache_file.read(),
+            status_code=HTTPStatus.OK.real,
+            content_type=request.format,
+            release_date=request.release,
+            request=request
+        )
 
 
-async def get_data(*, request: Request) -> Response:
+async def get_data(*, request: Request) -> Union[Response, RedirectResponse]:
     content = None
 
     if request.method == RequestMethod.Get:
-        content = from_cache_or_db(request=request)
+        content = await from_cache_or_db(request=request)
 
     if request.method == RequestMethod.Head:
         async with Connection() as conn:
@@ -170,10 +174,4 @@ async def get_data(*, request: Request) -> Response:
         if values is None or not values:
             raise NotAvailable()
 
-    return Response(
-        content=content,
-        status_code=HTTPStatus.OK.real,
-        content_type=request.format,
-        release_date=request.release,
-        request=request
-    )
+    return content

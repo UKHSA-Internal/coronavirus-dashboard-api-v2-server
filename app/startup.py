@@ -55,8 +55,7 @@ def start_app():
                 server_location=Settings.server_location
             ),
             logging_instances=logging_instances
-        ),
-        Middleware(GZipMiddleware)
+        )
     ]
 
     if Settings.DEBUG:

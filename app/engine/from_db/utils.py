@@ -26,48 +26,75 @@ __all__ = [
 ]
 
 
-def cache_response(func):
-    """
-    Storage cache decorator.
-    """
-    @wraps(func)
-    async def responder(*, request: Request, cache_results: bool, **kwargs):
-        data = func(request=request, cache_results=cache_results, **kwargs)
-        if not cache_results:
-            async for item in data:
-                yield item
+async def cache_response(func, *, request: Request, **kwargs) -> bool:
+    kws = {
+        "container": "apiv2cache",
+        "path": request.path,
+        "compressed": False,
+        "cache_control": "max-age=90, s-maxage=300",
+        "content_type": request.content_type,
+        "content_disposition":
+            f'attachment; filename="{request.area_type}_{request.release:%Y-%m-%d}.'
+            f'{request.format if request.format != "xml" else "json"}"',
 
-            return
+    }
 
-        async with AsyncStorageClient("apiv2cache", request.path) as blob_client:
-            try:
-                # Create an empty blob
-                await blob_client.upload(b"")
+    prefix, suffix, delimiter = b"", b"", b""
 
-                with NamedTemporaryFile() as fp:
-                    async with blob_client.lock_file(15) as lock:
-                        async for item in data:
+    if request.format in ['json', 'xml']:
+        prefix, suffix, delimiter = b'{"body":[', b']}', b','
+
+    current_location = 0
+
+    async with AsyncStorageClient(**kws) as blob_client:
+        try:
+            # Create an empty blob
+            await blob_client.upload(b"")
+            await blob_client.set_tags({"done": "0", "in_progress": "1"})
+            with NamedTemporaryFile() as fp:
+
+                async with blob_client.lock_file(15) as lock:
+                    async for index, item in func(request=request, **kwargs):
+                        if index == 0 and current_location == 0:
+                            fp.write(prefix)
                             fp.write(item)
 
-                            yield item
+                        elif index == 0 and current_location != 0:
+                            fp.seek(0)
+                            tmp = item + fp.read()
+                            fp.seek(0)
+                            fp.truncate(0)
+                            fp.write(tmp)
 
-                            # Renew the lease by after each
-                            # iteration as some processes may
-                            # take longer.
-                            await lock.renew()
+                        elif item:
+                            fp.write(delimiter)
+                            fp.write(item)
 
-                        fp.seek(0)
-                        await blob_client.upload(fp.read())
+                        current_location = fp.tell()
 
-                await blob_client.set_tags(request.metric_tag)
+                        # Renew the lease by after each
+                        # iteration as some processes may
+                        # take longer.
+                        await lock.renew()
 
-            except Exception as err:
-                # Remove the blob on exception - data may be incomplete.
-                if await blob_client.exists():
-                    await blob_client.delete()
-                raise err
+                    fp.write(suffix)
+                    fp.seek(0)
 
-    return responder
+                    await blob_client.upload(fp.read())
+
+                    tags = request.metric_tag
+                    tags["done"] = "1"
+                    tags["in_progress"] = "0"
+                    await blob_client.set_tags(tags)
+
+        except Exception as err:
+            # Remove the blob on exception - data may be incomplete.
+            if await blob_client.exists():
+                await blob_client.delete()
+            raise err
+
+    # return responder
+    return True
 
 
 def format_dtypes(df: DataFrame, column_types: Dict[str, object]) -> DataFrame:

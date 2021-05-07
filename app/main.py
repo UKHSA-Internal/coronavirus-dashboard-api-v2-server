@@ -5,21 +5,16 @@
 # Python:
 import logging
 from typing import Optional, List
-from inspect import isasyncgen
 from json import dumps
 from http import HTTPStatus
 
 # 3rd party:
-from fastapi import (
-    FastAPI, Query,
-    Request as APIRequest,
-    Response as APIResponse,
-)
-from fastapi.responses import StreamingResponse
+from fastapi import Query, Request as APIRequest
+from fastapi.responses import RedirectResponse as APIRedirect, Response as APIResponse
 
 # Internal:
 from app.startup import start_app
-from app.utils.operations import Response, Request
+from app.utils.operations import Response, RedirectResponse, Request
 from app.utils.assets import RequestMethod
 from app.exceptions import APIException
 from app.engine import get_data, run_healthcheck
@@ -28,7 +23,8 @@ from app.config import Settings
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 __all__ = [
-    'main'
+    'main',
+    'app'
 ]
 
 
@@ -58,6 +54,7 @@ async def main(req: APIRequest,
 
     try:
         response = await get_data(request=request)
+
     except APIException as err:
         logging.info(err)
         content = dumps({"response": err.message, "status_code": err.code})
@@ -77,19 +74,26 @@ async def main(req: APIRequest,
             "status_code": err,
             "status": getattr(err, 'phrase')
         })
-        response = Response(content=content.encode(), status_code=err)
+        response = APIResponse(content=content.encode(), status_code=err)
 
-    if request.method == RequestMethod.Head or not isasyncgen(response.content):
+    if request.method == RequestMethod.Head:
         return APIResponse(
-            response.content,
+            str(),
             status_code=response.status_code,
-            headers=await response.headers
+            headers=response.headers
         )
 
-    return StreamingResponse(
+    if isinstance(response, RedirectResponse):
+        return APIRedirect(
+            url=response.location,
+            status_code=HTTPStatus.SEE_OTHER.real,
+            headers=response.headers
+        )
+
+    return APIResponse(
         response.content,
-        status_code=response.status_code,
-        headers=await response.headers
+        status_code=HTTPStatus.OK.real,
+        headers=response.headers
     )
 
 
