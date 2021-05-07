@@ -130,15 +130,16 @@ async def from_cache_or_db(request: Request) -> Union[Response, RedirectResponse
 
             # Wait for the blob lease to be release until `max_wait_cycles`
             # is reached or the blob is removed.
-            if await blob_client.is_locked() and props.get("in_progress", '1') == '1':
+            lock_status = await blob_client.is_locked()
+            if lock_status and props.get("in_progress", '1') == '1':
                 await sleep(wait_period)
                 wait_counter += 1
                 continue
-            elif props.get('done', "0") != "1" and props.get('in_progress', '1') == '1':
+            elif not lock_status and props.get('done', "0") != "1" and props.get('in_progress', '1') == '1':
                 await blob_client.delete()
                 cache_results = True
                 break
-            elif props.get('done', "0") == "1" and props.get('in_progress', '1') == '1':
+            elif props.get('done', "0") == "1" and props.get('in_progress', '1') == '0':
                 cache_results = False
                 break
 
