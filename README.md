@@ -1,5 +1,7 @@
 # Coronavirus Dashboard API v.2.1
 
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/publichealthengland/coronavirus-dashboard-api-v2-server)
+
 Source code for the Coronavirus API - version 2.1 
 
 This version introduces the batch downloads API that powers 
