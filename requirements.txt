@@ -4,12 +4,15 @@ azure-storage-blob
 asyncpg
 numpy
 pandas
-opencensus-ext-azure
 opencensus-ext-logging
 opencensus-ext-requests
+opencensus~=0.7.12
+opencensus-ext-azure==1.0.5
+opencensus-ext-logging==0.1.0
 starlette
 fastapi
 uvicorn[standard]
 gunicorn
 aiohttp
 aiofiles
+pytest
