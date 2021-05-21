@@ -102,7 +102,7 @@ class InvalidQueryParameter(APIException):
         "Query parameter '$name' ($name $operator $value) is invalid. "
         "Did you mean '$closest_match'?"
     )
-    code = HTTPStatus.UNPROCESSABLE_ENTITY
+    code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, *, name: str, operator: str, value: str, **kwargs):
         from app.utils.assets import MetricData
@@ -121,7 +121,7 @@ class ExceedsMaxParameters(APIException):
         f"Number of query parameters exceed the maximum of $max_params allowed. "
         "Current query includes $current_total parameters: $parameters"
     )
-    code = HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+    code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, *, max_params: int, current_total: int, parameters: str, **kwargs):
         super().__init__(
@@ -156,7 +156,7 @@ class IncorrectQueryValueType(APIException):
         "Expected a $expectation value, got '$actual' instead. See the API "
         "documentations for additional information."
     )
-    code = HTTPStatus.NOT_ACCEPTABLE
+    code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, *, expression: str, expectation: str, actual: str, **kwargs):
         super().__init__(
@@ -173,7 +173,7 @@ class ValueNotAcceptable(APIException):
         "pattern. The value for this '$key' must match the regular expression pattern "
         "'$pattern'. See the API documentations for additional information."
     )
-    code = HTTPStatus.EXPECTATION_FAILED
+    code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, *, expression: str, key: str, pattern: str, **kwargs):
         super().__init__(expression=expression, key=key, pattern=pattern, **kwargs)
@@ -184,7 +184,7 @@ class InvalidStructure(APIException):
         "Invalid structure. The structure must either be a JSON, or an Array object. "
         "Make sure you use double quotation marks in the structure."
     )
-    code = HTTPStatus.EXPECTATION_FAILED
+    code = HTTPStatus.BAD_REQUEST
 
 
 class InvalidQuery(APIException):
@@ -192,7 +192,7 @@ class InvalidQuery(APIException):
         "Invalid Query: the query does not conform to the correct "
         "pattern. $details"
     )
-    code = HTTPStatus.PRECONDITION_FAILED
+    code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, *, details: str = str()):
         super().__init__(details=details)
