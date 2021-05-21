@@ -4,7 +4,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Python:
 from typing import Dict, Iterable
-from functools import wraps
 from tempfile import NamedTemporaryFile
 
 # 3rd party:
@@ -12,6 +11,7 @@ from pandas import DataFrame
 from orjson import dumps, loads
 
 # Internal:
+from app.exceptions import NotAvailable
 from app.storage import AsyncStorageClient
 from app.utils.operations import Request
 from app.utils.assets import MetricData
@@ -51,8 +51,8 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
             # Create an empty blob
             await blob_client.upload(b"")
             await blob_client.set_tags({"done": "0", "in_progress": "1"})
-            with NamedTemporaryFile() as fp:
 
+            with NamedTemporaryFile() as fp:
                 async with blob_client.lock_file(15) as lock:
                     async for index, item in func(request=request, **kwargs):
                         if index == 0 and current_location == 0:
@@ -79,6 +79,11 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
 
                     fp.write(suffix)
                     fp.seek(0)
+
+                    # Anything below 40 bytes won't contain any
+                    # data and won't be cached.
+                    if fp.tell() == 40:
+                        raise NotAvailable()
 
                     await blob_client.upload(fp.read())
 
