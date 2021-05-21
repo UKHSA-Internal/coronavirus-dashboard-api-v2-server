@@ -12,7 +12,6 @@ from tempfile import NamedTemporaryFile
 
 # 3rd party:
 from orjson import dumps
-from aiofiles import open as aio_open
 
 # Internal:
 from app.exceptions import NotAvailable
