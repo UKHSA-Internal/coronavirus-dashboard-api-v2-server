@@ -69,23 +69,16 @@ def log_response(query, arguments):
     return process
 
 
-# @cache_response
 async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[bytes, bytes]:
     if len(request.nested_metrics) > 0:
         func = partial(process_nested_data, request=request)
     else:
         func = partial(process_generic_data, request=request)
 
-    # prefix, suffix = b"", b""
-    #
-    # if request.format == 'json':
-    #     prefix, suffix = b'{"body":[', b']}'
-
     # We use cursor movements instead of offset-limit. This is faster
     # as the DB won't have to iterate to fine the offset location.
     async with Connection() as conn:
         area_codes = await request.get_query_area_codes(conn)
-        # yield prefix
 
         header_generated = False
 
@@ -106,10 +99,6 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
             yield index, res
 
             header_generated = True
-
-    # Yielding the closing chunk, which needs to be separate
-    # for data with a different ending - e.g. JSON.
-    # yield suffix
 
 
 async def from_cache_or_db(request: Request) -> Union[Response, RedirectResponse]:
