@@ -72,6 +72,14 @@ class Request:
         self.url = url
         self.content_type = self._content_types_lookup[self.format]
 
+        if not area_type:
+            raise InvalidQuery(
+                details=(
+                    "`areaType` is a mandatory parameter. Include `areaType` as a "
+                    "query parameter and try again."
+                )
+            )
+
         if isinstance(metric, list) and len(metric) and ',' in metric[0]:
             self.metric = metric[0].split(',')
         elif isinstance(metric, list) and len(metric):
