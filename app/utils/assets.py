@@ -97,7 +97,20 @@ class MetricData:
         "newDeaths28DaysByDeathDateAgeDemographics": ["age", "deaths", "rollingSum", "rollingRate"],
         "cumAdmissionsByAge": ["age", "rate", "value"],
         "maleCases": ["age", "rate", "value"],
-        "femaleCases": ["age", "rate", "value"]
+        "femaleCases": ["age", "rate", "value"],
+        "vaccinationsAgeDemographics": [
+            "age",
+            "VaccineRegisterPopulationByVaccinationDate",
+            "cumPeopleVaccinatedCompleteByVaccinationDate",
+            "newPeopleVaccinatedCompleteByVaccinationDate",
+            "cumPeopleVaccinatedFirstDoseByVaccinationDate",
+            "newPeopleVaccinatedFirstDoseByVaccinationDate",
+            "cumPeopleVaccinatedSecondDoseByVaccinationDate",
+            "newPeopleVaccinatedSecondDoseByVaccinationDate",
+            "cumVaccinationFirstDoseUptakeByVaccinationDatePercentage",
+            "cumVaccinationCompleteCoverageByVaccinationDatePercentage",
+            "cumVaccinationSecondDoseUptakeByVaccinationDatePercentage"
+        ]
     }
 
 
