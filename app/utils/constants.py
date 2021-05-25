@@ -355,6 +355,8 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
     "cumVaccinationFirstDoseUptakeByVaccinationDatePercentage": float,
     "cumVaccinationCompleteCoverageByVaccinationDatePercentage": float,
     "newPeopleVaccinatedCompleteByVaccinationDate": int,
+
+    "vaccinationsAgeDemographics": list,
 }
 
 # Values must be provided in lowercase characters.
@@ -633,4 +635,6 @@ if ENVIRONMENT == "DEVELOPMENT":
         "cumVaccinationFirstDoseUptakeByVaccinationDatePercentage": float,
         "cumVaccinationCompleteCoverageByVaccinationDatePercentage": float,
         "newPeopleVaccinatedCompleteByVaccinationDate": int,
+
+        "vaccinationsAgeDemographics": list,
     }
