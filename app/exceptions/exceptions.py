@@ -90,9 +90,9 @@ def get_closest_match(value: str, options: Iterable[str]) -> str:
 
 class APIException(HTTPException):
     message = str()
-    code: HTTPStatus
+    code: HTTPStatus = HTTPStatus.BAD_REQUEST
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.message = Template(self.message).substitute(**kwargs)
         super().__init__(status_code=self.code, detail=self.message)
 

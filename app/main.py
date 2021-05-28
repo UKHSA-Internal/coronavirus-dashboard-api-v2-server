@@ -103,7 +103,7 @@ async def main(req: APIRequest,
 async def healthcheck(req: APIRequest):
     try:
         response = await run_healthcheck()
-    except Exception() as err:
+    except Exception as err:
         logger.exception(err)
         raise err
 

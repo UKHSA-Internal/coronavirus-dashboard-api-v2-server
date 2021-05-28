@@ -55,11 +55,11 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
             with NamedTemporaryFile() as fp:
                 async with blob_client.lock_file(15) as lock:
                     async for index, item in func(request=request, **kwargs):
-                        if index == 0 and current_location == 0:
+                        if not (index and current_location):
                             fp.write(prefix)
                             fp.write(item)
 
-                        elif index == 0 and current_location != 0:
+                        elif not index and current_location:
                             fp.seek(0)
                             tmp = item + fp.read()
                             fp.seek(0)

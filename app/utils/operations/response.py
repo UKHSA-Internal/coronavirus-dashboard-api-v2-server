@@ -5,7 +5,6 @@
 # Python:
 from typing import Union, AsyncGenerator, Dict
 from datetime import datetime, date
-from os import getenv
 
 # 3rd party:
 
@@ -41,7 +40,6 @@ class RedirectResponse:
 
         self.location = f"https://api.{host}/downloads/{container}/{path}"
 
-        url_path = request.url.path.removeprefix(API_PREFIX)
         permalink = f"https://{API_URL}/apiv2cache/{request.path}"
 
         headers = {
