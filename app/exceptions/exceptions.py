@@ -94,7 +94,12 @@ class APIException(HTTPException):
 
     def __init__(self, **kwargs):
         self.message = Template(self.message).substitute(**kwargs)
-        super().__init__(status_code=self.code, detail=self.message)
+
+        super(APIException, self).__init__(
+            status_code=self.code.real,
+            detail=self.message,
+            **kwargs
+        )
 
 
 class InvalidQueryParameter(APIException):
