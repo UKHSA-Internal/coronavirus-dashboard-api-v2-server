@@ -179,7 +179,11 @@ class Request:
             area_type = self.area_type if self.area_type != "msoa" else "region"
             area_ids = await conn.fetch(const.DBQueries.area_id_by_type, area_type)
         else:
-            area_ids = await conn.fetch(const.DBQueries.area_id_by_code, self.area_code)
+            area_ids = await conn.fetch(
+                const.DBQueries.area_id_by_code,
+                self.area_code,
+                self.area_type
+            )
 
         batch_partitions = MetricData.single_partition_types - {"msoa"}
 

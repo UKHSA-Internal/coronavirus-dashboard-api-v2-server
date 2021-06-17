@@ -155,8 +155,18 @@ WHERE
   $filters
 FETCH FIRST 1 ROW ONLY""")
 
-    area_id_by_type = "SELECT MIN(id) AS id FROM covid19.area_reference WHERE area_type = $1 GROUP BY area_code"
-    area_id_by_code = "SELECT MIN(id) AS id FROM covid19.area_reference WHERE area_code = $1 GROUP BY area_code"
+    area_id_by_type = """\
+SELECT MIN(id) AS id 
+FROM covid19.area_reference 
+WHERE area_type = $1 
+GROUP BY area_code"""
+
+    area_id_by_code = """\
+SELECT MIN(id) AS id 
+FROM covid19.area_reference 
+WHERE area_code = $1 
+  AND area_type = $2 
+GROUP BY area_code"""
 
 
 DATA_TYPES: Dict[str, Callable[[str], Any]] = {
