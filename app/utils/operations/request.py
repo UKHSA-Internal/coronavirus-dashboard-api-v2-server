@@ -234,6 +234,8 @@ class Request:
                 # When no nested metric is present in `self.metric`:
                 if self.area_type != "msoa":
                     query = const.DBQueries.main_data
+                elif "cases" not in self.metric:
+                    query = const.DBQueries.non_nested_object_with_area_code
                 else:
                     query = const.DBQueries.nested_object_with_area_code
 

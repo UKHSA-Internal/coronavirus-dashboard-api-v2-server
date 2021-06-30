@@ -120,6 +120,51 @@ FROM
 ) AS result
 ORDER BY result.date DESC""")
 
+    non_nested_object_with_area_code = to_template("""\
+SELECT *
+FROM
+(
+     SELECT area_type,
+            area_code,
+            area_name,
+            date,
+            metric,
+            CASE
+                WHEN (payload ? 'value') THEN (payload -> 'value')
+                ELSE payload::JSONB
+            END AS value
+     FROM covid19.time_series_p${partition} AS ts
+         JOIN covid19.metric_reference  AS mr ON mr.id = metric_id
+         JOIN covid19.release_reference AS rr ON rr.id = release_id
+         JOIN covid19.area_reference    AS ar ON ar.id = area_id
+         JOIN covid19.area_relation     AS arel ON arel.child_id = area_id
+     WHERE area_type = $$2
+       AND metric = ANY ($$1::VARCHAR[])
+       AND rr.released IS TRUE
+       AND parent_id = ANY ($$3::INT[])
+     UNION
+     (
+          SELECT area_type,
+                 area_code,
+                 area_name,
+                 date,
+                 metric,
+                 CASE
+                     WHEN (payload ? 'value') THEN (payload -> 'value')
+                     ELSE payload::JSONB
+                 END AS value
+          FROM covid19.time_series_p${partition} AS ts
+              JOIN covid19.metric_reference  AS mr ON mr.id = metric_id
+              JOIN covid19.release_reference AS rr ON rr.id = release_id
+              JOIN covid19.area_reference    AS ar ON ar.id = area_id
+          WHERE area_type = $$2
+            AND metric = ANY($$1::VARCHAR[])
+            AND rr.released IS TRUE
+            AND area_id = ANY ($$3::INT[])
+    )
+) AS result
+ORDER BY result.date DESC""")
+
     nested_array = to_template("""\
 SELECT
     ar.area_type  AS "areaType",
