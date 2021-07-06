@@ -98,6 +98,8 @@ class MetricData:
         "cumAdmissionsByAge": ["age", "rate", "value"],
         "maleCases": ["age", "rate", "value"],
         "femaleCases": ["age", "rate", "value"],
+        "maleDeaths28Days": ["age", "rate", "value"],
+        "femaleDeaths28Days": ["age", "rate", "value"],
         "vaccinationsAgeDemographics": [
             "age",
             "VaccineRegisterPopulationByVaccinationDate",
