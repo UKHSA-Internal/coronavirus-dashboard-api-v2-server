@@ -5,6 +5,7 @@
 # Python:
 from typing import Dict, Iterable
 from tempfile import NamedTemporaryFile
+from asyncio import Lock
 
 # 3rd party:
 from pandas import DataFrame
@@ -53,39 +54,41 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
             await blob_client.set_tags({"done": "0", "in_progress": "1"})
 
             with NamedTemporaryFile() as fp:
-                async with blob_client.lock_file(15) as lock:
+                async with blob_client.lock_file(60) as blob_lock:
                     async for index, item in func(request=request, **kwargs):
-                        if not (index and current_location):
-                            fp.write(prefix)
-                            fp.write(item)
+                        async with Lock():
+                            if not (index and current_location):
+                                fp.write(prefix)
+                                fp.write(item)
 
-                        elif not index and current_location:
-                            fp.seek(0)
-                            tmp = item + fp.read()
-                            fp.seek(0)
-                            fp.truncate(0)
-                            fp.write(tmp)
+                            elif not index and current_location:
+                                fp.seek(0)
+                                tmp = item + fp.read()
+                                fp.seek(0)
+                                fp.truncate(0)
+                                fp.write(tmp)
 
-                        elif item:
-                            fp.write(delimiter)
-                            fp.write(item)
+                            elif item:
+                                fp.write(delimiter)
+                                fp.write(item)
 
-                        current_location = fp.tell()
+                            current_location = fp.tell()
 
                         # Renew the lease by after each
                         # iteration as some processes may
                         # take longer.
-                        await lock.renew()
+                        await blob_lock.renew()
 
-                    fp.write(suffix)
-                    fp.seek(0)
+                    async with Lock():
+                        fp.write(suffix)
+                        fp.seek(0)
 
-                    # Anything below 40 bytes won't contain any
-                    # data and won't be cached.
-                    if fp.tell() == 40:
-                        raise NotAvailable()
+                        # Anything below 40 bytes won't contain any
+                        # data and won't be cached.
+                        if fp.tell() == 40:
+                            raise NotAvailable()
 
-                    await blob_client.upload(fp.read())
+                        await blob_client.upload(fp.read())
 
                     tags = request.metric_tag
                     tags["done"] = "1"
