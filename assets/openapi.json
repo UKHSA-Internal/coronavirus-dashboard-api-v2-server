@@ -1,0 +1,200 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Dashboard API",
+    "version": "v2.1",
+    "description": "API providing batch downloads, powers the downloads page",
+    "contact": {
+      "email": "coronavirus-tracker@phe.gov.uk",
+      "url": "https://coronavirus.data.gov.uk/",
+      "name": "UK Coronavirus Dashboard"
+    },
+    "license": {
+      "name": "Open Government Licence v3.0.",
+      "url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.coronavirus.data.gov.uk/v2"
+    }
+  ],
+  "paths": {
+    "/data": {
+      "get": {
+        "summary": "Data",
+        "operationId": "data-get",
+        "description": "Request data for download.",
+        "parameters": [
+          {
+            "name": "areaType",
+            "in": "query",
+            "description": "Area type for which the metrics are requested.\n",
+            "required": true,
+            "schema": {
+              "enum": [
+                "overview",
+                "nation",
+                "region",
+                "nhsRegion",
+                "utla",
+                "ltla",
+                "nhsTrust",
+                "msoa"
+              ],
+              "type": "string",
+              "default": "overview"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "description": "Metric names can be found using the generic api or through the downloads page.",
+            "required": true,
+            "example": "cumAdmissions",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "areaCode",
+            "in": "query",
+            "description": "Area code for which the metrics are requested.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Format in which to return the response.",
+            "required": true,
+            "schema": {
+              "enum": [
+                "json",
+                "jsonl",
+                "csv",
+                "xml"
+              ],
+              "type": "string",
+              "default": "json"
+            }
+          },
+          {
+            "name": "release",
+            "in": "query",
+            "description": "Release date if the request is for archive data. (YYYY-MM-DD)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Forwarded-Host",
+            "in": "header",
+            "description": "Proxy host name",
+            "required": true,
+            "schema": {
+              "enum": [
+                "coronavirus.data.gov.uk"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success - returns file in specified format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/data"
+                },
+                "examples": {
+                  "Example response file content for new and cumulative admissions": {
+                    "value": "{\"body\":[{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-20\",\"cumAdmissions\":512460,\"newAdmissions\":858},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-19\",\"cumAdmissions\":511602,\"newAdmissions\":929},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-18\",\"cumAdmissions\":510673,\"newAdmissions\":899},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-17\",\"cumAdmissions\":509774,\"newAdmissions\":951},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-16\",\"cumAdmissions\":508823,\"newAdmissions\":862},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-15\",\"cumAdmissions\":507961,\"newAdmissions\":807},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-14\",\"cumAdmissions\":507154,\"newAdmissions\":783},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-13\",\"cumAdmissions\":506371,\"newAdmissions\":783},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-12\",\"cumAdmissions\":505588,\"newAdmissions\":855},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-11\",\"cumAdmissions\":504733,\"newAdmissions\":842},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-10\",\"cumAdmissions\":503891,\"newAdmissions\":887},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-09\",\"cumAdmissions\":503004,\"newAdmissions\":756},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-08\",\"cumAdmissions\":502248,\"newAdmissions\":738},{\"areaType\":\"overview\",\"areaCode\":\"K02000001\",\"areaName\":\"United Kingdom\",\"date\":\"2021-08-07\",\"cumAdmissions\":501510,\"newAdmissions\":722}]}"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "summary": "Healthcheck",
+        "operationId": "healthcheck-get",
+        "description": "Checks the health of the service.",
+        "responses": {
+          "200": {
+            "description": "OK - healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/healthcheck"
+                },
+                "examples": {
+                  "Healthy response example": {
+                    "value": "{\n  \"db\": \"healthy - 2021-08-25 12:57:48.741854+00:00\",\n  \"storage\": \"healthy - data_202108241425.json\"\n}"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error - unhealthy"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "data": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "areaType": {
+                  "type": "string"
+                },
+                "areaCode": {
+                  "type": "string"
+                },
+                "areaName": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "areaType",
+                "areaCode",
+                "areaName",
+                "date"
+              ]
+            }
+          }
+        }
+      },
+      "healthcheck": {
+        "type": "object",
+        "properties": {
+          "db": {
+            "type": "string"
+          },
+          "storage": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
