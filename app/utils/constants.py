@@ -698,4 +698,13 @@ if ENVIRONMENT == "DEVELOPMENT":
         "newPeopleVaccinatedCompleteByVaccinationDate": int,
 
         "vaccinationsAgeDemographics": list,
+
+        "cumPeopleVaccinatedThirdDoseByPublishDate": int,
+        "newPeopleVaccinatedThirdDoseByPublishDate": int,
+        "cumVaccinationBoosterDoseUptakeByPublishDatePercentage": float,
+        "cumPeopleVaccinatedThirdInjectionByPublishDate": int,
+        "newPeopleVaccinatedThirdInjectionByPublishDate": int,
+        "newPeopleVaccinatedBoosterDoseByPublishDate": int,
+        "cumVaccinationThirdInjectionUptakeByPublishDatePercentage": float,
+        "cumPeopleVaccinatedBoosterDoseByPublishDate": int,
     }
