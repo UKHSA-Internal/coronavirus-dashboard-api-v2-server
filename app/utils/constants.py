@@ -418,28 +418,20 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
     "newPeopleVaccinatedCompleteByVaccinationDate": int,
 
     "vaccinationsAgeDemographics": list,
+
+    "cumPeopleVaccinatedThirdDoseByPublishDate": int,
+    "newPeopleVaccinatedThirdDoseByPublishDate": int,
+    "cumVaccinationBoosterDoseUptakeByPublishDatePercentage": float,
+    "cumPeopleVaccinatedThirdInjectionByPublishDate": int,
+    "newPeopleVaccinatedThirdInjectionByPublishDate": int,
+    "newPeopleVaccinatedBoosterDoseByPublishDate": int,
+    "cumVaccinationThirdInjectionUptakeByPublishDatePercentage": float,
+    "cumPeopleVaccinatedBoosterDoseByPublishDate": int,
 }
 
-# Values must be provided in lowercase characters.
-# Example:
-# { "areaName": ["united kingdom"] }
-#
-# The API will the refuse the respond to any queries
-# whose filter value for a specific parameter is NOT
-# in the list.
+
 RESTRICTED_PARAMETER_VALUES: Dict[str, List[str]] = dict()
 
-# if ENVIRONMENT != "DEVELOPMENT":
-#     RESTRICTED_PARAMETER_VALUES.update({
-#         "areaName": [
-#             "united kingdom"
-#         ],
-#         "areaType": [
-#             "overview",
-#             "nation",
-#             "nhsregion"
-#         ]
-#     })
 
 if ENVIRONMENT == "DEVELOPMENT":
     DATA_TYPES: Dict[str, Callable[[str], Any]] = {
