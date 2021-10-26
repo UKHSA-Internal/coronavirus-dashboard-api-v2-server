@@ -79,25 +79,26 @@ async def process_get_request(*, request: Request, **kwargs) -> AsyncGenerator[b
     async with Connection() as conn:
         area_codes = await request.get_query_area_codes(conn)
 
-        header_generated = False
+    header_generated = False
 
-        # Fetching data from the DB.
-        for index, codes in enumerate(area_codes):
-
+    # Fetching data from the DB.
+    for index, codes in enumerate(area_codes):
+        async with Connection() as conn:
             result = await conn.fetch(request.db_query, *request.db_args, codes)
-            if not len(result):
-                continue
 
-            res = format_response(
-                func(result),
-                response_type=request.format,
-                request=request,
-                include_header=not header_generated
-            )
+        if not len(result):
+            continue
 
-            yield index, res
+        res = format_response(
+            func(result),
+            response_type=request.format,
+            request=request,
+            include_header=not header_generated
+        )
 
-            header_generated = True
+        yield index, res
+
+        header_generated = True
 
 
 async def from_cache_or_db(request: Request) -> Union[Response, RedirectResponse]:
