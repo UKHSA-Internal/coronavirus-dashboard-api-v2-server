@@ -61,16 +61,4 @@ async def test_storage():
 
 
 async def run_healthcheck() -> dict[str, str]:
-    loop = get_event_loop()
-
-    tasks = [
-        loop.create_task(test_db()),
-        loop.create_task(test_storage())
-    ]
-
-    response = dict()
-    done, pending = await wait(tasks)
-    for future in done:
-        response.update(future.result())
-
-    return response
+    return {"status": "ALIVE"}
