@@ -7,10 +7,13 @@ import logging
 from typing import Optional, List
 from json import dumps
 from http import HTTPStatus
+from pathlib import Path
 
 # 3rd party:
 from fastapi import Query, Request as APIRequest
-from fastapi.responses import RedirectResponse as APIRedirect, Response as APIResponse
+from fastapi.responses import (
+    RedirectResponse as APIRedirect, Response as APIResponse, FileResponse
+)
 
 # Internal:
 from app.startup import start_app
@@ -31,6 +34,14 @@ __all__ = [
 logger = logging.getLogger("app")
 
 app = start_app()
+
+base_path = Path(__file__).parent
+
+
+@app.get("/api/v2/openapi.json")
+async def main():
+    open_api = base_path.joinpath("assets", "openapi.json")
+    return FileResponse(str(open_api.absolute()))
 
 
 @app.get("/api/v2/data")
