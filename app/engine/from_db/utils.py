@@ -85,7 +85,7 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
 
                         # Anything below 40 bytes won't contain any
                         # data and won't be cached.
-                        if fp.tell() <= 40:
+                        if fp.tell() == 40:
                             raise NotAvailable()
 
                         await blob_client.upload(fp.read())
