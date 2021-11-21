@@ -16,7 +16,8 @@
   },
   "servers": [
     {
-      "url": "https://api.coronavirus.data.gov.uk/v2"
+      "url": "https://api.coronavirus.data.gov.uk/v2",
+      "description": "Bulk download API - Primary"
     }
   ],
   "paths": {
@@ -29,7 +30,7 @@
           {
             "name": "areaType",
             "in": "query",
-            "description": "Area type for which the metrics are requested.\n",
+            "description": "Area type for which the metrics are requested.",
             "required": true,
             "schema": {
               "enum": [
@@ -49,7 +50,7 @@
           {
             "name": "metric",
             "in": "query",
-            "description": "Metric names can be found using the generic api or through the downloads page.",
+            "description": "Metric names can be found from metrics documentation on the website.",
             "required": true,
             "example": "cumAdmissions",
             "schema": {
@@ -62,6 +63,7 @@
           {
             "name": "areaCode",
             "in": "query",
+            "required": false,
             "description": "Area code for which the metrics are requested.",
             "schema": {
               "type": "string"
@@ -87,19 +89,8 @@
             "name": "release",
             "in": "query",
             "description": "Release date if the request is for archive data. (YYYY-MM-DD)",
+            "required": false,
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "X-Forwarded-Host",
-            "in": "header",
-            "description": "Proxy host name",
-            "required": true,
-            "schema": {
-              "enum": [
-                "coronavirus.data.gov.uk"
-              ],
               "type": "string"
             }
           }
@@ -138,7 +129,7 @@
                 },
                 "examples": {
                   "Healthy response example": {
-                    "value": "{\n  \"db\": \"healthy - 2021-08-25 12:57:48.741854+00:00\",\n  \"storage\": \"healthy - data_202108241425.json\"\n}"
+                    "value": "{\"status\":\"ALIVE\"}"
                   }
                 }
               }
@@ -187,10 +178,7 @@
       "healthcheck": {
         "type": "object",
         "properties": {
-          "db": {
-            "type": "string"
-          },
-          "storage": {
+          "status": {
             "type": "string"
           }
         }
