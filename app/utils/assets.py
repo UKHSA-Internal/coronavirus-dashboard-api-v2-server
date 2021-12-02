@@ -103,15 +103,23 @@ class MetricData:
         "vaccinationsAgeDemographics": [
             "age",
             "VaccineRegisterPopulationByVaccinationDate",
+
             "cumPeopleVaccinatedCompleteByVaccinationDate",
             "newPeopleVaccinatedCompleteByVaccinationDate",
+
             "cumPeopleVaccinatedFirstDoseByVaccinationDate",
             "newPeopleVaccinatedFirstDoseByVaccinationDate",
+
             "cumPeopleVaccinatedSecondDoseByVaccinationDate",
             "newPeopleVaccinatedSecondDoseByVaccinationDate",
+
+            "cumPeopleVaccinatedThirdInjectionByVaccinationDate",
+            "newPeopleVaccinatedThirdInjectionByVaccinationDate",
+
             "cumVaccinationFirstDoseUptakeByVaccinationDatePercentage",
-            "cumVaccinationCompleteCoverageByVaccinationDatePercentage",
             "cumVaccinationSecondDoseUptakeByVaccinationDatePercentage"
+            "cumVaccinationThirdInjectionUptakeByVaccinationDatePercentage",
+            "cumVaccinationCompleteCoverageByVaccinationDatePercentage",
         ]
     }
 
