@@ -432,6 +432,10 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
     "newPCRTestsBySpecimenDate": int,
     "newVirusTestsBySpecimenDate": int,
     "cumVirusTestsBySpecimenDate": int,
+
+    'cumPeopleVaccinatedThirdInjectionByVaccinationDate': int,
+    'newPeopleVaccinatedThirdInjectionByVaccinationDate': int,
+    'cumVaccinationThirdInjectionUptakeByVaccinationDatePercentage': float,
 }
 
 
@@ -709,4 +713,8 @@ if ENVIRONMENT == "DEVELOPMENT":
         "newPCRTestsBySpecimenDate": int,
         "newVirusTestsBySpecimenDate": int,
         "cumVirusTestsBySpecimenDate": int,
+
+        'cumPeopleVaccinatedThirdInjectionByVaccinationDate': int,
+        'newPeopleVaccinatedThirdInjectionByVaccinationDate': int,
+        'cumVaccinationThirdInjectionUptakeByVaccinationDatePercentage': float,
     }
