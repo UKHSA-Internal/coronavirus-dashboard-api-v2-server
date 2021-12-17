@@ -325,6 +325,10 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
     'cumLFDTestsBySpecimenDate': int,
     'newVirusTestsByPublishDate': int,
     'cumVirusTestsByPublishDate': int,
+    'newVirusTestsByPublishDateRollingSum': int,
+    'newVirusTestsByPublishDateRollingChange': int,
+    'newVirusTestsByPublishDateRollingChangePercentage': float,
+    'newVirusTestsByPublishDateRollingDirection': str,
 
     'newCasesBySpecimenDateDirection': str,
     'newCasesBySpecimenDateChange': int,
@@ -599,6 +603,10 @@ if ENVIRONMENT == "DEVELOPMENT":
         'cumLFDTestsBySpecimenDate': int,
         'newVirusTestsByPublishDate': int,
         'cumVirusTestsByPublishDate': int,
+        'newVirusTestsByPublishDateRollingSum': int,
+        'newVirusTestsByPublishDateRollingChange': int,
+        'newVirusTestsByPublishDateRollingChangePercentage': float,
+        'newVirusTestsByPublishDateRollingDirection': str,
 
         "alertLevel": int,
         "transmissionRateMin": float,
