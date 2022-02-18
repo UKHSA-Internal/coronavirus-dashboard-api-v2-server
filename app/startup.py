@@ -64,14 +64,26 @@ def start_app():
             log.addHandler(handler)
             log.setLevel(level)
 
+    # todo: below is for production the one after that is for development
+
+    # app = FastAPI(
+    #     title="UK Coronavirus Dashboard - API Service",
+    #     version="2.1.0",
+    #     docs_url=None,
+    #     redoc_url=None,
+    #     openapi_url="/api/v2/openapi.json",
+    #     middleware=middlewares,
+    #     exception_handlers=exception_handlers
+    # )
+    
+
     app = FastAPI(
         title="UK Coronavirus Dashboard - API Service",
         version="2.1.0",
-        docs_url=None,
         redoc_url=None,
         openapi_url="/api/v2/openapi.json",
-        middleware=middlewares,
         exception_handlers=exception_handlers
     )
+
 
     return app
