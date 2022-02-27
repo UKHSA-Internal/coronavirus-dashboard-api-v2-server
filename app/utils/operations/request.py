@@ -14,7 +14,7 @@ from hashlib import blake2b
 from starlette.datastructures import URL
 
 # Internal:
-from app.exceptions import InvalidQuery, BadRequest, StructureTooLarge
+from app.exceptions import InvalidQuery, BadRequest, StructureTooLarge, WeekendPublicationEnded
 from .. import constants as const
 from ..assets import RequestMethod, MetricData
 from ..formatters import json_formatter
@@ -29,6 +29,8 @@ __all__ = [
 logger = getLogger('app')
 
 ENVIRONMENT = getenv("API_ENV", "PRODUCTION")
+
+LAST_WEEKEND = datetime(year=2022, month=2, day=20)
 
 
 def to_chunks(iterable: list[Any], n_chunk: int) -> Iterator[list[Any]]:
@@ -79,6 +81,10 @@ class Request:
                     "query parameter and try again."
                 )
             )
+
+        # Publication of data during weekends stopped after 20 Feb 2022.
+        if self.release.isoweekday() > 5 and self.release > LAST_WEEKEND:
+            raise WeekendPublicationEnded(archive_date=self.release)
 
         if isinstance(metric, list) and len(metric) and ',' in metric[0]:
             self.metric = metric[0].split(',')

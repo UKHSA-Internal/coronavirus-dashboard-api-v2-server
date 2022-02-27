@@ -23,6 +23,7 @@ from string import Template
 from difflib import SequenceMatcher
 from typing import Iterable
 from logging import getLogger
+from datetime import date
 
 # 3rd party:
 from fastapi.exceptions import HTTPException
@@ -49,7 +50,8 @@ __all__ = [
     'NotAvailable',
     "UnauthorisedRequest",
     'StructureTooLarge',
-    'BadRequest'
+    'BadRequest',
+    'WeekendPublicationEnded',
 ]
 
 
@@ -201,6 +203,17 @@ class InvalidQuery(APIException):
 
     def __init__(self, *, details: str = str()):
         super().__init__(details=details)
+
+
+class WeekendPublicationEnded(APIException):
+    message = (
+        "Requested archive data for '$date'. Publication of data during weekends ended "
+        "on 20 February 2022, after which archives are only available for weekdays."
+    )
+    code = HTTPStatus.NOT_FOUND
+
+    def __init__(self, *, archive_date: date):
+        super().__init__(date=f"{archive_date:%A, %d %B %Y}")
 
 
 class RequestTooLarge(APIException):
