@@ -15,7 +15,6 @@ from opencensus.trace.samplers import AlwaysOnSampler
 
 # Internal:
 from app.utils.assets import add_cloud_role_name
-from app.middleware.tracers.starlette import TraceRequestMiddleware
 from app.config import Settings
 from app.exceptions.handlers import exception_handlers
 
@@ -44,18 +43,24 @@ logging_instances = [
 def start_app():
     middlewares = [
         Middleware(ProxyHeadersMiddleware, trusted_hosts=Settings.service_domain),
-        Middleware(
-            TraceRequestMiddleware,
-            sampler=AlwaysOnSampler(),
-            instrumentation_key=Settings.instrumentation_key,
-            cloud_role_name=add_cloud_role_name,
-            extra_attrs=dict(
-                environment=Settings.ENVIRONMENT,
-                server_location=Settings.server_location
-            ),
-            logging_instances=logging_instances
-        )
     ]
+
+    if Settings.ENVIRONMENT != "DEVELOPMENT":
+        from app.middleware.tracers.starlette import TraceRequestMiddleware
+
+        middlewares.append(
+            Middleware(
+                TraceRequestMiddleware,
+                sampler=AlwaysOnSampler(),
+                instrumentation_key=Settings.instrumentation_key,
+                cloud_role_name=add_cloud_role_name,
+                extra_attrs=dict(
+                    environment=Settings.ENVIRONMENT,
+                    server_location=Settings.server_location
+                ),
+                logging_instances=logging_instances
+            )
+        )
 
     if Settings.DEBUG:
         handler = logging.StreamHandler(stdout)
@@ -66,23 +71,18 @@ def start_app():
 
     # todo: below is for production the one after that is for development
 
-    # app = FastAPI(
-    #     title="UK Coronavirus Dashboard - API Service",
-    #     version="2.1.0",
-    #     docs_url=None,
-    #     redoc_url=None,
-    #     openapi_url="/api/v2/openapi.json",
-    #     middleware=middlewares,
-    #     exception_handlers=exception_handlers
-    # )
-    
-
     app = FastAPI(
         title="UK Coronavirus Dashboard - API Service",
         version="2.1.0",
+        docs_url=(
+            "/docs"
+            if Settings.ENVIRONMENT == "DEVELOPMENT"
+            else None
+        ),
         redoc_url=None,
         openapi_url="/api/v2/openapi.json",
-        exception_handlers=exception_handlers
+        middleware=middlewares,
+        exception_handlers=exception_handlers,
     )
 
 

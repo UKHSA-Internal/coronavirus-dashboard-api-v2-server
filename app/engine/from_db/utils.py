@@ -51,7 +51,7 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
         try:
             # Create an empty blob
             await blob_client.upload(b"")
-            await blob_client.set_tags({"done": "0", "in_progress": "1"})
+            await blob_client.set_metadata({"done": "0", "in_progress": "1"})
 
             with NamedTemporaryFile() as fp:
                 async with blob_client.lock_file(60) as blob_lock:
@@ -93,7 +93,7 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
                     tags = request.metric_tag
                     tags["done"] = "1"
                     tags["in_progress"] = "0"
-                    await blob_client.set_tags(tags)
+                    await blob_client.set_metadata(tags)
 
         except Exception as err:
             # Remove the blob on exception - data may be incomplete.

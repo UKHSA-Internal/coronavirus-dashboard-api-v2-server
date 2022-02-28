@@ -6,12 +6,13 @@
 from functools import wraps
 from inspect import signature
 
-# 3rd party:
-from opencensus.trace.execution_context import get_opencensus_tracer
-from opencensus.trace.span import SpanKind
-
 # Internal:
+from app.config import Settings
 
+# 3rd party:
+if Settings.ENVIRONMENT != "DEVELOPMENT":
+    from opencensus.trace.execution_context import get_opencensus_tracer
+    from opencensus.trace.span import SpanKind
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 __all__ = [
@@ -31,7 +32,11 @@ def trace_async_method_operation(*cls_attrs, dep_type="name", name="name", **att
 
             bound_inputs = sig.bind(klass, *args, **kwargs)
 
-            tracer = get_opencensus_tracer()
+            tracer = (
+                None
+                if Settings.ENVIRONMENT == "DEVELOPMENT"
+                else get_opencensus_tracer()
+            )
 
             if tracer is None:
                 return await func(*bound_inputs.args, **bound_inputs.kwargs)
@@ -86,7 +91,11 @@ def trace_method_operation(*cls_attrs, dep_type="name", name="name", **attrs):
 
             bound_inputs = sig.bind(klass, *args, **kwargs)
 
-            tracer = get_opencensus_tracer()
+            tracer = (
+                None
+                if Settings.ENVIRONMENT == "DEVELOPMENT"
+                else get_opencensus_tracer()
+            )
 
             if tracer is None:
                 return func(*bound_inputs.args, **bound_inputs.kwargs)
