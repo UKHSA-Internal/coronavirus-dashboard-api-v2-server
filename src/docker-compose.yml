@@ -12,8 +12,8 @@ services:
       - ./server/engine.nginx:/etc/nginx/conf.d/engine.conf
     ports:
       - 5000:5000
-    env_file:
-      - .env.dev
+    # env_file:
+    #   - .env.dev
     environment:
       IS_DEV: 1
       API_ENV: DEVELOPMENT
