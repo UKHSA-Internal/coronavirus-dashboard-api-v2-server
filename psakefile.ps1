@@ -72,8 +72,8 @@ Task compose -depends build, run, test, stop
 Task publish -depends login_container_registry, get_container_build_information, push_container_image
 
 Task init {
-    Assert { $null -ne (Get-Command docker -ErrorAction SilentlyContinue) } "Docker must be installed to build this repository"
-    Assert { $null -ne (Get-Command az -ErrorAction SilentlyContinue) } "Az CLI required to use this repository"
+    Assert ( $null -ne (Get-Command docker -ErrorAction SilentlyContinue) ) "Docker must be installed to build this repository"
+    Assert ( $null -ne (Get-Command az -ErrorAction SilentlyContinue) ) "Az CLI required to use this repository"
 
     # Install dependent PS modules
     "Az.ContainerRegistry", "Az.Accounts" | ForEach-Object {
@@ -90,6 +90,10 @@ Task init {
 Task login_az {
     if ($env:ci_pipeline) {
         if (!(Get-AzContext)) {
+            Assert ( $null -ne $env:PHE_ARM_CLIENT_SECRET ) "PHE_ARM_CLIENT_SECRET env var value required"
+            Assert ( $null -ne $env:PHE_ARM_CLIENT_ID ) "PHE_ARM_CLIENT_ID env var value required"
+            Assert ( $null -ne $env:PHE_ARM_SUBSCRIPTION_ID ) "PHE_ARM_SUBSCRIPTION_ID env var value required"
+            Assert ( $null -ne $env:PHE_ARM_TENANT_ID ) "PHE_ARM_TENANT_ID env var value required"
             $connect_as_sp = @{
                 Credential       = New-Object pscredential `
                     -ArgumentList @($env:PHE_ARM_CLIENT_ID, (ConvertTo-SecureString $env:PHE_ARM_CLIENT_SECRET -AsPlainText -Force))
@@ -109,10 +113,12 @@ Task login_az {
 }
 
 Task login_container_registry -depends login_az {
+    Assert ( $null -ne $env:PHE_CONTAINER_REGISTRY_NAME ) "PHE_CONTAINER_REGISTRY_NAME env var value required"
     Connect-AzContainerRegistry -Name (Get-AzContainerRegistry | Where-Object Name -EQ $env:PHE_CONTAINER_REGISTRY_NAME).Name
 }
 
 Task get_container_build_information -depends login_container_registry {
+    Assert ( $null -ne $env:PHE_CONTAINER_REGISTRY_NAME ) "PHE_CONTAINER_REGISTRY_NAME env var value required"
     $script:container_info = Get-ContainerPipelineInfo `
         -RegistryName $env:PHE_CONTAINER_REGISTRY_NAME `
         -RegistryType AzureAcr `
@@ -155,7 +161,8 @@ Task test {
     
     $test_config.Run.Container = New-PesterContainer `
         -Path "*.tests.ps1" `
-        -Data @{ ServiceUrl = "http://localhost:8080" }
+        -Data @{ ServiceUrl = "http://localhost:8080" `
+    }
     
     try { 
         Invoke-Pester -Configuration $test_config
