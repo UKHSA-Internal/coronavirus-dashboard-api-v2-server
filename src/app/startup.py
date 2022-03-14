@@ -46,7 +46,7 @@ def start_app():
         Middleware(ProxyHeadersMiddleware, trusted_hosts=Settings.service_domain),
     ]
 
-    if Settings.IS_DEV == 1: # Only monitor when provisioned to the cloud
+    if not Settings.DEBUG: # Only monitor when provisioned to the cloud
         middlewares += [
             Middleware(
                 TraceRequestMiddleware,
