@@ -31,6 +31,32 @@ We welcome contributions by everyone. Please read
 the [contributions guide](https://github.com/PublicHealthEngland/coronavirus-dashboard/blob/master/CONTRIBUTING.md) for 
 additional information.
 
+### Getting Started
+
+This repository makes the following assumptions:
+
+- You have pwsh installed and is the shell you are using
+- You have docker installed and it is configured to whatever platform (Linux or Windows) based on the container image you want to ship
+
+To build and test this repository:
+
+```pwsh
+./build.ps1 init
+./build.ps1 compose
+```
+
+Look within the psakefile.ps1 for more granular tasks during development.
+
+### Configuring container blob storage
+
+You can use the Az.Storage PowerShell module to create files manually within the created Azurite container instance.
+
+```
+$context = New-AzStorageContext -ConnectionString "<value from docker-compose file>"
+New-AzStorageContainer -Name test -Context $context
+Get-AzStorageContainer -Name test -Context $context
+```
+
 ### How can I help?
 We have a [public project management board](https://github.com/orgs/PublicHealthEngland/projects/1) that 
 shows outstanding issues to which everyone can contribute. Pick a ticket, assign it to 

@@ -1,21 +1,14 @@
 Properties {
-    $Solution = "cw-19-dashboard-api-v2-server"
+    $Solution = "apiv2server" # Use existing name from older builds
     $OutputRoot = Join-Path $psake.context.originalDirectory "BuildOutput"
     $TestRoot = Join-Path $psake.context.originalDirectory "test"
-    $BuiltPackages = Join-Path $OutputRoot "BuiltPackages"
     $TestOutputPath = Join-Path $OutputRoot "TestResults"
-    $SourceRoot = Join-Path $psake.context.originalDirectory "src"
-    $TemplateConfigRoot = Join-Path $SourceRoot "config_templates"
-
+    
     # Docker Props
-    # $DockerBuildRoot = Join-Path $psake.context.originalDirectory "src" "container"
     $DockerBuildRoot = Join-Path $psake.context.originalDirectory "src"
-    # $DockerComposePath = Join-Path $psake.context.originalDirectory "docker-compose.yml"
-    $DockerComposePath = Join-Path $psake.context.originalDirectory "src/docker-compose.yml"
-    $ContainerNameSpace = "api"
+    $DockerComposePath = Join-Path $psake.context.originalDirectory "docker-compose.yml"
+    $ContainerNameSpace = "app"
     $DockerComposeLogsPath = Join-Path $OutputRoot "containers.log"
-    $DockerInputVarTemplate = Join-Path $TemplateConfigRoot ".env.tmpl"
-    $DockerInputEnvVarFilePath = Join-Path $psake.context.originalDirectory ".env"
 }
 
 # TODO: Refac into PS module
@@ -25,17 +18,17 @@ Function Get-ContainerPipelineInfo {
     param(
         [string]
         $RegistryName,
-
+        
         [ValidateSet("AzureAcr", "AWSAcr", "DockerHub")]
         [string]
         $RegistryType,
-
+        
         [string]
         $ContainerNameSpace,
-
+        
         [string]
         $ContainerName,
-
+        
         [string]
         $Version
     )
@@ -55,7 +48,7 @@ Function Get-ContainerPipelineInfo {
             throw "Registry type not supported"
         }
     }
-
+    
     if ($Registry) {
         $FullyQualifiedContainerRepositoryId = "{0}/{1}" -f $RegistryUrl, $ContainerRepositoryName
 
@@ -76,11 +69,11 @@ Function Get-ContainerPipelineInfo {
 }
 
 Task compose -depends build, run, test, stop
-Task publish -depends get_container_build_information, push_container_image
+Task publish -depends login_container_registry, get_container_build_information, push_container_image
 
 Task init {
-    Assert ( $null -ne (Get-Command docker -ErrorAction SilentlyContinue) ) "Docker must be installed to build this repository"
-    Assert ( $null -ne (Get-Command az -ErrorAction SilentlyContinue) ) "Azure CLI must be installed to build this repository"
+    Assert { $null -ne (Get-Command docker -ErrorAction SilentlyContinue) } "Docker must be installed to build this repository"
+    Assert { $null -ne (Get-Command az -ErrorAction SilentlyContinue) } "Az CLI required to use this repository"
 
     # Install dependent PS modules
     "Az.ContainerRegistry", "Az.Accounts" | ForEach-Object {
@@ -91,7 +84,7 @@ Task init {
         }
     }
     Remove-Item $OutputRoot -ErrorAction SilentlyContinue -Force -Recurse
-    New-Item $OutputRoot, $TestOutputPath, $BuiltPackages -Type Directory -ErrorAction Stop | Out-Null
+    New-Item $OutputRoot, $TestOutputPath -Type Directory -ErrorAction Stop | Out-Null
 }
 
 Task login_az {
@@ -129,27 +122,16 @@ Task get_container_build_information -depends login_container_registry {
     $container_info
 }
 
-Task set_configuration_defaults {
-    # This task configures useful defaults for local development only.
-    # Configuration during automated workflows should be defined as env vars within the github workflow files for each env
-    if (-not $env:ci_pipeline) {
-        # generic config
-        # INSTANCE set via tf_provider_setup
-        $env:RELEASE_VERSION ??= "0.0.0-Undefined"
-    }
-}
-
 # By default, we don't actually build the app, just plan it to catch any silly errors
 # The module will be refactored out of this repo into its own base definition where it will be tested independently from the container logic here
-Task build -depends get_container_build_information {
-    Write-Output "Executing $("docker build --pull -t {0} -t {1} {2}" -f $container_info.CurrentTag, $container_info.LatestTag, $DockerBuildRoot)"
-    Exec { docker build --pull -t $container_info.CurrentTag -t $container_info.LatestTag $DockerBuildRoot }
-    # Exec { docker build -t $container_info.CurrentTag -t $container_info.LatestTag $DockerBuildRoot }
+Task build -depends clean, get_container_build_information {
+    $env:IMAGE = $container_info.CurrentTag
+    Exec { docker-compose build }
 }
 
-Task run {
+Task run -depends get_container_build_information {
     Exec {
-        # docker-compose -f $DockerComposePath --env-file .env up -d
+        $env:IMAGE = $container_info.CurrentTag
         docker-compose -f $DockerComposePath up -d
         docker-compose -f $DockerComposePath ps
     }
@@ -157,23 +139,38 @@ Task run {
 
 Task stop {
     try {
-        Exec { docker-compose -f $DockerComposePath rm -fs}
+        Exec { docker-compose -f $DockerComposePath rm -fs }
     }
     catch {}
 }
 
 Task test {
-    try {
-        Start-Sleep -Seconds 3
-        $env:QueryApiUrl = "http://localhost:433/"
+    Import-Module pester -ErrorAction SilentlyContinue
+    $test_config = [PesterConfiguration]::new()
+    $test_config.Run.Path = $TestRoot
+    $test_config.Run.Throw = $true
+    $test_config.Output.Verbosity = "Detailed"
+    $test_config.TestResult.Enabled = $true
+    $test_config.TestResult.OutputPath = $TestOutputPath
+    
+    $test_config.Run.Container = New-PesterContainer `
+        -Path "*.tests.ps1" `
+        -Data @{ ServiceUrl = "http://localhost:8080" }
+    
+    try { 
+        Invoke-Pester -Configuration $test_config
     }
     catch {
         docker-compose -f $DockerComposePath logs > $DockerComposeLogsPath
+        if ($env:ci_pipeline) {
+            Invoke-Task stop
+        }
         throw
     }
-    finally {
-        Invoke-Task stop
-    }
+}
+
+Task clean {
+    Get-ChildItem $OutputRoot | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 Task push_container_image {

@@ -27,7 +27,11 @@ RUN addgroup --system --gid 102 app                                  && \
              --gecos "app user" --shell /bin/false --uid 102 app
 
 # Install app requirements
-COPY ./requirements.txt               /$PYTHONPATH/requirements.txt
+# Proxy support for pip in container, uncomment if needed locally
+# ENV REQUESTS_CA_BUNDLE=/$PYTHONPATH/chain.pem
+# COPY ./chain.pem       /$PYTHONPATH/chain.pem
+
+COPY ./requirements.txt /$PYTHONPATH/requirements.txt
 
 RUN python3 -m pip install --no-cache-dir -U pip                              && \
     python3 -m pip install --no-cache-dir setuptools                          && \

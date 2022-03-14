@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  coronavirus-dashboard-api-v2:
+    image: ${IMAGE}
+    build:
+      context: src/.
+    restart: always
+    volumes:
+      - ./src/app/:/app/app
+      - ./src/server/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+      - ./src/server/gunicorn_conf.py:/gunicorn_conf.py
+      - ./src/server/upload.nginx:/etc/nginx/conf.d/upload.conf
+      - ./src/server/engine.nginx:/etc/nginx/conf.d/engine.conf
+    ports:
+      - 8080:5000
+    environment:
+      - PYTHONUNBUFFERED=1;
+      - APPINSIGHTS_INSTRUMENTATIONKEY=00000000-0000-0000-0000-000000000000
+      - IS_DEV=1
+      - FLASK_DEV=DEVELOPMENT
+      - API_ENV=DEVELOPMENT
+      - POSTGRES_CONNECTION_STRING=postgres://postgres:postgres@localhost:5432/c19-postgres
+      - BlobConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+    depends_on:
+      - postgres
+      - azureite
+
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=c19-postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - vol_postgres:/var/lib/postgresql/data
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    restart: always
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+
+volumes:
+  vol_postgres:
+    driver: local
