@@ -1,0 +1,31 @@
+name: Publish docker image pre-release
+on:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: pwsh
+env:
+  ci_pipeline: true
+  PHE_CONTAINER_REGISTRY_NAME: ${{ secrets.PHE_CONTAINER_REGISTRY_NAME }}
+  PHE_ARM_CLIENT_ID: ${{ secrets.PHE_ARM_CLIENT_ID }}
+  PHE_ARM_CLIENT_SECRET: ${{ secrets.PHE_ARM_CLIENT_SECRET }}
+  PHE_ARM_TENANT_ID: ${{ secrets.PHE_ARM_TENANT_ID }}
+  PHE_ARM_SUBSCRIPTION_ID: ${{ secrets.PHE_ARM_SUBSCRIPTION_ID }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set version and tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v5.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_prefix: "" # Remove any prefix to ensure compatibility for all build types
+          pre_release_branches: ^((?!main).)*$
+      - name: build.ps1 init
+        run: ./build.ps1 init ${{ steps.tag_version.outputs.new_tag }} ci
+      - name: build.ps1 compose
+        run: ./build.ps1 compose ${{ steps.tag_version.outputs.new_tag }} ci
+      - name: build.ps1 publish
+        run: ./build.ps1 publish ${{ steps.tag_version.outputs.new_tag }} ci
