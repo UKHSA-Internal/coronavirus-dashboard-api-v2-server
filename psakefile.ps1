@@ -88,12 +88,12 @@ Task init {
 }
 
 Task login_az {
+    Assert ( $null -ne $env:PHE_ARM_SUBSCRIPTION_ID ) "PHE_ARM_SUBSCRIPTION_ID env var value required"
+    Assert ( $null -ne $env:PHE_ARM_TENANT_ID ) "PHE_ARM_TENANT_ID env var value required"
     if ($env:ci_pipeline) {
         if (!(Get-AzContext)) {
             Assert ( $null -ne $env:PHE_ARM_CLIENT_SECRET ) "PHE_ARM_CLIENT_SECRET env var value required"
             Assert ( $null -ne $env:PHE_ARM_CLIENT_ID ) "PHE_ARM_CLIENT_ID env var value required"
-            Assert ( $null -ne $env:PHE_ARM_SUBSCRIPTION_ID ) "PHE_ARM_SUBSCRIPTION_ID env var value required"
-            Assert ( $null -ne $env:PHE_ARM_TENANT_ID ) "PHE_ARM_TENANT_ID env var value required"
             $connect_as_sp = @{
                 Credential       = New-Object pscredential `
                     -ArgumentList @($env:PHE_ARM_CLIENT_ID, (ConvertTo-SecureString $env:PHE_ARM_CLIENT_SECRET -AsPlainText -Force))
