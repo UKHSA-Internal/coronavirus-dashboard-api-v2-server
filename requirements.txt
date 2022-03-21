@@ -4,7 +4,6 @@ azure-storage-blob
 asyncpg
 numpy
 pandas
-opencensus-ext-logging
 opencensus-ext-requests
 opencensus~=0.7.12
 opencensus-ext-azure==1.0.5

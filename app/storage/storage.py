@@ -577,11 +577,11 @@ class AsyncStorageClient:
         action="set tags",
         operation="PUT"
     )
-    async def set_tags(self, tags: dict[str, str]):
+    async def set_metadata(self, tags: dict[str, str]):
         if self._lock is not None:
             await self._lock.renew()
 
         try:
-            return await self.client.set_blob_tags(tags, lease=self._lock)
+            return await self.client.set_blob_metadata(tags, lease=self._lock)
         except HttpResponseError:
-            logger.warning("Failed to create tags.")
+            logger.warning("Failed to create metadata.")

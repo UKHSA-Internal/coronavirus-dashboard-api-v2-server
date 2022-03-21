@@ -114,7 +114,7 @@ async def from_cache_or_db(request: Request) -> Union[Response, RedirectResponse
 
     async with AsyncStorageClient(**kws) as blob_client:
         while await blob_client.exists() and wait_counter <= max_wait_cycles:
-            props = await blob_client.client.get_blob_tags()
+            props = (await blob_client.client.get_blob_properties())['metadata']
 
             # Wait for the blob lease to be release until `max_wait_cycles`
             # is reached or the blob is removed.
