@@ -759,4 +759,7 @@ if ENVIRONMENT == "DEVELOPMENT":
         'newReinfectionsBySpecimenDateDirection': str,
         'newReinfectionsBySpecimenDateRollingRate': float,
         'newReinfectionsBySpecimenDateRollingSum': int,
+
+        "changeInNewDeaths28DaysByDeathDate": int,
+        "previouslyReportedNewDeaths28DaysByDeathDate": int,
     }
