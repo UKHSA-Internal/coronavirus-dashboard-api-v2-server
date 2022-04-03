@@ -92,14 +92,36 @@ class MetricData:
     single_partition_types = {"utla", "ltla", "nhstrust", "msoa"}
 
     nested_struct = {
-        "newCasesBySpecimenDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
-        "newCasesByPublishDateAgeDemographics": ["age", "cases", "rollingSum", "rollingRate"],
-        "newDeaths28DaysByDeathDateAgeDemographics": ["age", "deaths", "rollingSum", "rollingRate"],
-        "cumAdmissionsByAge": ["age", "rate", "value"],
-        "maleCases": ["age", "rate", "value"],
-        "femaleCases": ["age", "rate", "value"],
-        "maleDeaths28Days": ["age", "rate", "value"],
-        "femaleDeaths28Days": ["age", "rate", "value"],
+        "newCasesBySpecimenDateAgeDemographics": [
+            "age", "cases", "rollingSum", "rollingRate"
+        ],
+        "newCasesByPublishDateAgeDemographics": [
+            "age", "cases", "rollingSum", "rollingRate"
+        ],
+        "newDeaths28DaysByDeathDateAgeDemographics": [
+            "age", "deaths", "rollingSum", "rollingRate"
+        ],
+        "cumAdmissionsByAge": [
+            "age", "rate", "value"
+        ],
+        "maleCases": [
+            "age", "rate", "value"
+        ],
+        "femaleCases": [
+            "age", "rate", "value"
+        ],
+        "maleDeaths28Days": [
+            "age", "rate", "value"
+        ],
+        "femaleDeaths28Days": [
+            "age", "rate", "value"
+        ],
+        "newFirstEpisodesBySpecimenDateAgeDemographics": [
+            "age", "cases", "rollingSum", "rollingRate"
+        ],
+        "newReinfectionsBySpecimenDateAgeDemographics": [
+            "age", "cases", "rollingSum", "rollingRate"
+        ],
         "vaccinationsAgeDemographics": [
             "age",
             "VaccineRegisterPopulationByVaccinationDate",
