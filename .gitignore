@@ -103,6 +103,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+**/.venv*
+**/.env**
+**/env**
 
 # Spyder project settings
 .spyderproject
@@ -126,6 +129,10 @@ dmypy.json
 bin
 obj
 appsettings.json
-local.settings.json
+**/local.settings.json
 .python_packages
 .env.dev
+/logs/
+/data/
+**/*.settings.json
+**/local.settings*
