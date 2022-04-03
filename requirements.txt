@@ -15,4 +15,4 @@ uvicorn[standard]
 gunicorn
 aiohttp
 aiofiles
-pytest
+
