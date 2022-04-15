@@ -463,6 +463,23 @@ DATA_TYPES: Dict[str, Callable[[str], Any]] = {
 
     "newFirstEpisodesBySpecimenDateAgeDemographics": list,
     "newReinfectionsBySpecimenDateAgeDemographics": list,
+
+    "newPeopleVaccinatedFirstDoseByPublishDateRollingSum": int,
+    "newPeopleVaccinatedSecondDoseByPublishDateRollingSum": int,
+    "newPeopleVaccinatedThirdInjectionByPublishDateRollingSum": int,
+
+    "newPeopleVaccinatedFirstDoseByPublishDateDirection": str,
+    "newPeopleVaccinatedSecondDoseByPublishDateDirection": str,
+    "newPeopleVaccinatedThirdInjectionByPublishDateDirection": str,
+
+
+    "newPeopleVaccinatedFirstDoseByPublishDateChange": int,
+    "newPeopleVaccinatedSecondDoseByPublishDateChange": int,
+    "newPeopleVaccinatedThirdInjectionByPublishDateChange": int,
+
+    "newPeopleVaccinatedFirstDoseByPublishDateChangePercentage": float,
+    "newPeopleVaccinatedSecondDoseByPublishDateChangePercentage": float,
+    "newPeopleVaccinatedThirdInjectionByPublishDateChangePercentage": float,
 }
 
 
@@ -771,4 +788,21 @@ if ENVIRONMENT == "DEVELOPMENT":
 
         "newFirstEpisodesBySpecimenDateAgeDemographics": list,
         "newReinfectionsBySpecimenDateAgeDemographics": list,
+
+        "newPeopleVaccinatedFirstDoseByPublishDateRollingSum": int,
+        "newPeopleVaccinatedSecondDoseByPublishDateRollingSum": int,
+        "newPeopleVaccinatedThirdInjectionByPublishDateRollingSum": int,
+
+        "newPeopleVaccinatedFirstDoseByPublishDateDirection": str,
+        "newPeopleVaccinatedSecondDoseByPublishDateDirection": str,
+        "newPeopleVaccinatedThirdInjectionByPublishDateDirection": str,
+
+
+        "newPeopleVaccinatedFirstDoseByPublishDateChange": int,
+        "newPeopleVaccinatedSecondDoseByPublishDateChange": int,
+        "newPeopleVaccinatedThirdInjectionByPublishDateChange": int,
+
+        "newPeopleVaccinatedFirstDoseByPublishDateChangePercentage": float,
+        "newPeopleVaccinatedSecondDoseByPublishDateChangePercentage": float,
+        "newPeopleVaccinatedThirdInjectionByPublishDateChangePercentage": float,
     }
