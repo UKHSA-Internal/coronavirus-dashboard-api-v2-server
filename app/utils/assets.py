@@ -142,6 +142,10 @@ class MetricData:
             "cumVaccinationSecondDoseUptakeByVaccinationDatePercentage",
             "cumVaccinationThirdInjectionUptakeByVaccinationDatePercentage",
             "cumVaccinationCompleteCoverageByVaccinationDatePercentage",
+
+            "newPeopleVaccinatedSpring22ByVaccinationDate",
+            "cumPeopleVaccinatedSpring22ByVaccinationDate",
+            "cumVaccinationSpring22UptakeByVaccinationDatePercentage",
         ]
     }
 
