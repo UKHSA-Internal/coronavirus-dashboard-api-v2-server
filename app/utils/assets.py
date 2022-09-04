@@ -122,6 +122,9 @@ class MetricData:
         "newReinfectionsBySpecimenDateAgeDemographics": [
             "age", "cases", "rollingSum", "rollingRate"
         ],
+        'variants': [
+            "variant", "cumWeeklySequenced", "newWeeklyPercentage",
+        ],
         "vaccinationsAgeDemographics": [
             "age",
             "VaccineRegisterPopulationByVaccinationDate",
