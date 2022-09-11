@@ -149,6 +149,13 @@ class MetricData:
             "newPeopleVaccinatedSpring22ByVaccinationDate",
             "cumPeopleVaccinatedSpring22ByVaccinationDate",
             "cumVaccinationSpring22UptakeByVaccinationDatePercentage",
+
+            'newPeopleVaccinatedSpring22ByVaccinationDate',
+            'newPeopleVaccinatedAutumn22ByVaccinationDate',
+            'cumPeopleVaccinatedSpring22ByVaccinationDate',
+            'cumPeopleVaccinatedAutumn22ByVaccinationDate',
+            'cumVaccinationAutumn22UptakeByVaccinationDatePercentage',
+            'cumVaccinationSpring22UptakeByVaccinationDatePercentage',
         ]
     }
 
