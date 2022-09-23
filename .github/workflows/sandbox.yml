@@ -11,7 +11,7 @@ jobs:
   name: Deploy APIv2 to Sandbox Environment
   environment: sandbox
 
-## declares credentials for Azure Container Registry!
+## declares credentials for Azure Container Registry!!
   steps:
   - name: Login to Azure Container Registry
     uses: azure/docker-login@v1
