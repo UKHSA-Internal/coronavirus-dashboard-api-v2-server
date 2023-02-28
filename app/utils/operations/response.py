@@ -8,7 +8,7 @@ from datetime import datetime, date
 
 # 3rd party:
 
-# Internal: 
+# Internal:
 from ..assets import get_latest_timestamp
 from .request import Request
 
@@ -38,7 +38,8 @@ class RedirectResponse:
         host: str = request.base_request.headers.get("X-Forwarded-Host", API_URL)
         host = host.removeprefix("https://").removeprefix("api.")
 
-        self.location = f"https://api.{host}/downloads/{container}/{path}"
+        # self.location = f"https://api.{host}/downloads/{container}/{path}"
+        self.location = f"https://{API_URL}/{container}/{path}"
 
         permalink = f"https://{API_URL}/apiv2cache/{request.path}"
 
