@@ -31,20 +31,26 @@ def process_generic_data(results: Iterable[Record], request: Request) -> DataFra
         for metric in filter(response_metrics.__contains__, MetricData.generic_dtypes)
     }
 
-    payload = (
-        df
-        .pivot_table(
-            values="value",
-            index=MetricData.base_metrics,
-            columns="metric",
-            aggfunc='first'
+    try:
+        payload = (
+            df
+            .pivot_table(
+                values="value",
+                index=MetricData.base_metrics,
+                columns="metric",
+                aggfunc='first'
+            )
+            .reset_index()
+            .sort_values(["date", "areaCode"], ascending=[False, True])
+            .pipe(format_dtypes, column_types=column_types)
+            .loc[:, [*MetricData.base_metrics, *response_metrics]]
+            .pipe(format_msoas, request=request)
+            .pipe(format_data, response_metrics=response_metrics)
         )
-        .reset_index()
-        .sort_values(["date", "areaCode"], ascending=[False, True])
-        .pipe(format_dtypes, column_types=column_types)
-        .loc[:, [*MetricData.base_metrics, *response_metrics]]
-        .pipe(format_msoas, request=request)
-        .pipe(format_data, response_metrics=response_metrics)
-    )
+    except KeyError as err:
+        # This can happen if there are only null values in the df
+        # then some operations on the dataframe can't be performed
+        # Return the expected Dataframe object
+        payload = DataFrame()
 
     return payload
