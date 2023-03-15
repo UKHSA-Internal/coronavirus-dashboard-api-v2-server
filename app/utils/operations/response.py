@@ -8,7 +8,8 @@ from datetime import datetime, date
 
 # 3rd party:
 
-# Internal: 
+# Internal:
+from app.config import Settings
 from ..assets import get_latest_timestamp
 from .request import Request
 
@@ -21,7 +22,7 @@ __all__ = [
 
 
 API_PREFIX = "/api/"
-API_URL = "coronavirus.data.gov.uk"
+API_URL = Settings.service_domain
 
 ResponseContentType = Union[None, bytes, AsyncGenerator[bytes, None]]
 
@@ -38,7 +39,13 @@ class RedirectResponse:
         host: str = request.base_request.headers.get("X-Forwarded-Host", API_URL)
         host = host.removeprefix("https://").removeprefix("api.")
 
-        self.location = f"https://api.{host}/downloads/{container}/{path}"
+        # TODO: remove this IF statement when routing rule for rr-apiv2cache frontend
+        #       domain name has been change
+        self.location = (
+            f"https://api.{host}/downloads/{container}/{path}"
+            if not host.startswith("sandbox")
+            else f"https://api-{host}/downloads/{container}/{path}"
+        )
 
         permalink = f"https://{API_URL}/apiv2cache/{request.path}"
 

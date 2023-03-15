@@ -26,27 +26,17 @@ def process_nested_data(results: Iterable[Record], request: Request) -> DataFram
         df = json_normalize(
             map(dict, results),
             nested_metric_name,
-            [*base_columns, MetricData.nested_struct[nested_metric_name]],
-            errors='ignore'
+            base_columns,
         )
-
-        df.rename(
-            columns={col: col.removeprefix(f"{nested_metric_name}.") for col in df.columns},
-            inplace=True
-        )
-
-        columns = [*base_columns, *MetricData.nested_struct[nested_metric_name]]
     else:
         df = DataFrame(
             results,
             columns=["areaCode", "areaType", "areaName", "date", "metric", nested_metric_name]
         )
-        columns = df.columns
 
     payload = (
         df
         .sort_values(["date", "areaCode"], ascending=[False, True])
-        .loc[:, columns]
     )
     payload = payload.where(payload.notnull(), None)
 

@@ -38,7 +38,7 @@ data_types["date"] = str
 
 
 query = """\
-SELECT rr.timestamp 
+SELECT rr.timestamp
 FROM covid19.release_reference AS rr
 JOIN covid19.release_category AS rc ON rc.release_id = rr.id
 WHERE DATE(rr.timestamp) = $1
@@ -146,16 +146,12 @@ class MetricData:
             "cumVaccinationThirdInjectionUptakeByVaccinationDatePercentage",
             "cumVaccinationCompleteCoverageByVaccinationDatePercentage",
 
+            "newPeopleVaccinatedAutumn22ByVaccinationDate",
+            "cumPeopleVaccinatedAutumn22ByVaccinationDate",
+            "cumVaccinationAutumn22UptakeByVaccinationDatePercentage",
             "newPeopleVaccinatedSpring22ByVaccinationDate",
             "cumPeopleVaccinatedSpring22ByVaccinationDate",
             "cumVaccinationSpring22UptakeByVaccinationDatePercentage",
-
-            'newPeopleVaccinatedSpring22ByVaccinationDate',
-            'newPeopleVaccinatedAutumn22ByVaccinationDate',
-            'cumPeopleVaccinatedSpring22ByVaccinationDate',
-            'cumPeopleVaccinatedAutumn22ByVaccinationDate',
-            'cumVaccinationAutumn22UptakeByVaccinationDatePercentage',
-            'cumVaccinationSpring22UptakeByVaccinationDatePercentage',
         ]
     }
 
