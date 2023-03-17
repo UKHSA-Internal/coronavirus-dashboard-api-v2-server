@@ -136,3 +136,5 @@ appsettings.json
 /data/
 **/*.settings.json
 **/local.settings*
+/.vs/slnx.sqlite
+/.vs/coronavirus-dashboard-api-v2-server/v16/.suo
