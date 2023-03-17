@@ -1,0 +1,40 @@
+name: Deploy APIv2 to Sandbox Environment
+
+on:
+ push:
+  branches:
+   - sandbox
+
+jobs:
+ deploy:
+  runs-on: ubuntu-latest
+  name: Deploy APIv2 to Sandbox Environment
+  environment: sandbox
+
+
+## declares credentials for Azure Container Registry!!
+  steps:
+  - name: Check out Code
+    uses: actions/checkout@v2
+  
+  - name: Login to Azure Container Registry
+    uses: azure/docker-login@v1
+    with:
+      login-server: c19dashacrprod.azurecr.io
+      username: ${{ secrets.REGISTRY_USERNAME }}
+      password: ${{ secrets.REGISTRY_PASSWORD }}
+
+
+  - name: Use Docker to Build and Push the Image to Azure Container Registry
+    run: |
+        docker build . -t c19dashacrprod.azurecr.io/apiv2server:${{ github.run_id }}-sandbox
+        docker push c19dashacrprod.azurecr.io/apiv2server:${{ github.run_id }}-sandbox 
+
+  
+  - name: Deploy Container to Azure App Services
+    uses: azure/webapps-deploy@v2
+    with:
+      app-name: 'c19dashsbuksfe01apiv2server'
+      publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      images: 'c19dashacrprod.azurecr.io/apiv2server:${{ github.run_id }}-sandbox'
+    

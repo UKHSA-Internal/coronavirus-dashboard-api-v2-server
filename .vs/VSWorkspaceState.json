@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\.github",
+    "\\.github\\workflows",
+    "\\app",
+    "\\app\\database"
+  ],
+  "SelectedNode": "\\app\\database\\postgres.py",
+  "PreviewInSolutionExplorer": false
+}

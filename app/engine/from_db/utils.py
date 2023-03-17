@@ -106,7 +106,8 @@ async def cache_response(func, *, request: Request, **kwargs) -> bool:
 
 
 def format_dtypes(df: DataFrame, column_types: Dict[str, object]) -> DataFrame:
-    json_columns = MetricData.json_dtypes.intersection(column_types)
+    # passing a list instead of a set to avid compatibility with new pandas version
+    json_columns = list(MetricData.json_dtypes.intersection(column_types))
 
     # Replace `null` string with None. This happens because
     # some DB queries convert `null` to `"null"` for type
