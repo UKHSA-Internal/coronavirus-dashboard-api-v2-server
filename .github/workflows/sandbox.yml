@@ -37,4 +37,22 @@ jobs:
       app-name: 'c19dashsbuksfe01apiv2server'
       publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
       images: 'c19dashacrprod.azurecr.io/apiv2server:${{ github.run_id }}-sandbox'
+
+
+ test:
+  runs-on: ubuntu-latest
+  name: Automated Regression Tests of COVID19 Dashboard Website
+  needs: deploy
+  steps:
+   # ## calls the AIQ-Automation-Covid-Dashboard workflow to run the automated tests
+  - name: Calls AIQ-Automation-Covid-Dashboard workflow to run the automated tests
+    run: |
+            curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.ACCESS_TOKEN }} " \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/UKHSA-Internal/AIQ-Automation-Covid-Dashboard/actions/workflows/CovidDashboard_CI.yml/dispatches \
+            -d '{"ref":"main","inputs": { "DExecution_Env":"Sandbox", "DScenarioNameTest":"SmokeTests_Scenario" }}'
+
     
