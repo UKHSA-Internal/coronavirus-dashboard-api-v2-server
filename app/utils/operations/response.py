@@ -39,13 +39,7 @@ class RedirectResponse:
         host: str = request.base_request.headers.get("X-Forwarded-Host", API_URL)
         host = host.removeprefix("https://").removeprefix("api.")
 
-        # TODO: remove this IF statement when routing rule for rr-apiv2cache frontend
-        #       domain name has been change
-        self.location = (
-            f"https://api.{host}/downloads/{container}/{path}"
-            if not host.startswith("sandbox")
-            else f"https://api-{host}/downloads/{container}/{path}"
-        )
+        self.location = f"https://api.{host}/downloads/{container}/{path}"
 
         permalink = f"https://{API_URL}/apiv2cache/{request.path}"
 
