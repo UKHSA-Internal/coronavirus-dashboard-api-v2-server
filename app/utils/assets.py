@@ -160,7 +160,7 @@ class MetricData:
 
             "newPeopleVaccinatedAutumn23ByVaccinationDate",
             "cumPeopleVaccinatedAutumn23ByVaccinationDate",
-            "cumPeopleVaccinatedAutumn23UptakeByVaccinationDatePercentage",
+            "cumVaccinationAutumn23UptakeByVaccinationDatePercentage",
         ]
     }
 
